@@ -145,8 +145,10 @@ internal fun CameraScreen(
 
     LaunchedEffect(Unit) {
         requestPermissionLauncher.launch(
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
-                arrayOf(Manifest.permission.CAMERA)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                arrayOf(
+                    Manifest.permission.CAMERA
+                )
             } else {
                 arrayOf(
                     Manifest.permission.CAMERA,
@@ -154,7 +156,6 @@ internal fun CameraScreen(
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )
             }
-
         )
     }
 
