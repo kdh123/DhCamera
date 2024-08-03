@@ -26,6 +26,7 @@ object DhCamera {
     private var nextBtnImage: Any? = null
     private var prevBtnImage: Any? = null
     private var thumbnailBackground: Any? = null
+    private var isFinishCamera: Boolean = false
 
     class Builder(private val context: Context) {
 
@@ -42,7 +43,8 @@ object DhCamera {
             return this
         }
 
-        fun onCompleted(onCompleted: (SavedUrl) -> Unit): Builder {
+        fun onCompleted(isFinishCamera: Boolean, onCompleted: (SavedUrl) -> Unit): Builder {
+            DhCamera.isFinishCamera = isFinishCamera
             DhCamera.onCompleted = onCompleted
             return this
         }
@@ -74,6 +76,7 @@ object DhCamera {
         }
     }
 
+    internal fun isFinishCamera() = isFinishCamera
     internal fun getFolderName() = folderName
     internal fun getOnCompleted() = onCompleted
     internal fun getOnPermissionDenied() = onPermissionDenied

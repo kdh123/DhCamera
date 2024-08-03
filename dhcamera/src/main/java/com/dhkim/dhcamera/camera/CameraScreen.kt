@@ -117,9 +117,9 @@ internal fun CameraScreen(
     onSavedPhoto: (String) -> Unit,
     onTakePhoto: (Bitmap, ImageBitmap) -> Unit,
     onResetPhoto: () -> Unit,
-    onNext: ((SavedUrl) -> Unit)? = null,
+    onNext: (SavedUrl) -> Unit,
     onPermissionDenied: (Permission) -> Unit,
-    onBack: (() -> Unit)? = null
+    onBack: () -> Unit
 ) {
     val backgroundItems = uiState.backgroundItems
     val context = LocalContext.current
@@ -170,7 +170,7 @@ internal fun CameraScreen(
         sideEffect.collectLatest {
             when (it) {
                 is CameraSideEffect.Completed -> {
-                    onNext?.invoke(it.savedUrl)
+                    onNext(it.savedUrl)
                 }
 
                 is CameraSideEffect.Message -> {
@@ -192,7 +192,7 @@ internal fun CameraScreen(
                             if (uiState.bitmap != null && uiState.backgroundBitmap != null) {
                                 onResetPhoto()
                             } else {
-                                onBack?.invoke()
+                                onBack()
                             }
                         }
                 )

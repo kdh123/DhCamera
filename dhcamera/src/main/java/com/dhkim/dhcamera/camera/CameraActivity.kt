@@ -29,7 +29,12 @@ internal class CameraActivity : ComponentActivity() {
                 onSavedPhoto = viewModel::onSavedPhoto,
                 onTakePhoto = viewModel::onTakePhoto,
                 onResetPhoto = viewModel::onResetPhoto,
-                onNext = DhCamera.getOnCompleted(),
+                onNext = {
+                    DhCamera.getOnCompleted()(it)
+                    if (DhCamera.isFinishCamera()) {
+                        finish()
+                    }
+                },
                 onPermissionDenied = DhCamera.getOnPermissionDenied(),
                 onBack = {
                     onBackPressed()

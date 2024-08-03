@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         }
                         Toast.makeText(this@MainActivity, "$deniedPermission 권한을 허용해주세요", Toast.LENGTH_SHORT).show()
                     }
-                    .onCompleted {
+                    .onCompleted(true) {
                         Intent(this@MainActivity, ImageActivity::class.java).apply {
                             putExtra("savedUrl", it)
                         }.run {
@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
                         .onPermissionDenied {
                             Toast.makeText(this@MainActivity, "카메라 권한을 허용해주세요", Toast.LENGTH_SHORT).show()
                         }
-                        .onCompleted {
+                        .onCompleted(true) {
                             Intent(this@MainActivity, ImageActivity::class.java).apply {
                                 putExtra("savedUrl", it)
                             }.run {
