@@ -1,11 +1,12 @@
 ## What is DhCamera?
 DhCamera is a camera library which is designed to make you develop camera feature easily for your app. You can also take a photo which has image or text you want like a time stamp photo with this library other than basic camera feature.
 
-## Including in your project
-### Required
+## Required
 - JDK 17 or higher
 - AGP 8.0.2 or higher
-
+- Kotlin version 1.9.0 or higher
+  
+## Including in your project
 ### Gradle
 - Project Level
 ```kotlin
@@ -13,7 +14,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 ```
-- App Level
+- Module Level
 ```kotlin
 dependencies {
     implementation("com.github.kdh123:DhCamera:1.0.0-alpha03")
@@ -81,11 +82,13 @@ DhCamera.Builder(context)
 - folderName : the folder's name for saving a photo
 - backgroundItems : If you want to take a photo which has text or image you want, you can use backgroundItems property. The backgroundItems' type is `List<BackgroundItem>`.
     - Text
+      - The unit of width and height is dp.
       ```kotlin
       BackgroundText.Builder(context)
                 .text("Hello World!")
                 .width(300)
                 .height(64)
+                .textSize(36)
                 .textAlign(DhCamera.TEXT_CENTER)
                 .align(DhCamera.TOP_CENTER)
                 .font(R.font.my_font)
@@ -94,6 +97,7 @@ DhCamera.Builder(context)
                 .build()
       ```
     - Image
+      - The unit of width and height is dp.
       - If you use drawable in resource, you can use drawable property. You should put the name of drawable resource.
       - If you use the url of image, you can use imageUrl property.
       - If you use both drawable and imageUrl properties, the drawable will be loaded.
@@ -131,18 +135,20 @@ DhCamera.Builder(context)
       
 - thumbnailBackground : If you use backgroundItems of properties, a small screen image list supposed to be rendered on a screen which has text or image will be shown. The tumbnailBackground of properties is the background image of item of screen list.
 - onCompleted : It is next process after saving a photo. If you want to finish Camera Activity after running next process, set the isFinishCamera property to true like below code. (If not, set to false)
+  - onCompleted delivers 'savedUri' which is the uri of image saved.
   ```kotlin
-  onCompleted(isFinishCamera = true) {
+  onCompleted(isFinishCamera = true) { savedUri ->
                 // todo
             }
   ```
-- onPermissionDenied: You can deal with the case when required permission got denied.
+- onPermissionDenied: You can handle the case when required permission got denied.
 - prevBtnImage, nextBtnImage : You can change image of retake button and save button. (retake button is left button and save button is right button in below image)
   
   <img width="277" alt="image" src="https://github.com/user-attachments/assets/4735195a-797c-4081-8a54-4695d664fa7e">
 
 ## Use Cases
 - [나의이야기](https://play.google.com/store/apps/details?id=com.dhkim.timecapsule) : The app that can make time capsule and you can check it in the future.
+- [펫메모리](https://play.google.com/store/apps/details?id=com.dohyun.petmemory) : The app that can make a memory that you've been together with your pets.
 
 ## License
 ```
