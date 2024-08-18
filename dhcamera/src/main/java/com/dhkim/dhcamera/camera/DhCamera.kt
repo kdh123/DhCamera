@@ -2,6 +2,7 @@ package com.dhkim.dhcamera.camera
 
 import android.content.Context
 import android.content.Intent
+import com.dhkim.dhcamera.camera.model.FontItem
 
 object DhCamera {
 
@@ -27,6 +28,8 @@ object DhCamera {
     private var prevBtnImage: Any? = null
     private var thumbnailBackground: Any? = null
     private var isFinishCamera: Boolean = false
+
+    private var fontElements = listOf<FontItem>()
 
     class Builder(private val context: Context) {
 
@@ -69,6 +72,11 @@ object DhCamera {
             return this
         }
 
+        fun fontElements(fontElements: List<FontItem>): Builder {
+            DhCamera.fontElements = fontElements
+            return this
+        }
+
         fun start() {
             Intent(context, CameraActivity::class.java).run {
                 context.startActivity(this)
@@ -84,4 +92,5 @@ object DhCamera {
     internal fun getThumbnailBackground() = thumbnailBackground
     internal fun getPrevBtnImage() = prevBtnImage
     internal fun getNextBtnImage() = nextBtnImage
+    internal fun getFontElements() = fontElements
 }

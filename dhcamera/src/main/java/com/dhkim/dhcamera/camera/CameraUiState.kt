@@ -3,6 +3,7 @@ package com.dhkim.dhcamera.camera
 import android.graphics.Bitmap
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.ImageBitmap
+import com.dhkim.dhcamera.camera.model.Element
 
 @Stable
 internal data class CameraUiState(
@@ -20,5 +21,7 @@ internal data class CameraUiState(
                 propIsSelected = true
             )
         ) + DhCamera.getBackgroundItems()
-    }
+    },
+    val elements: List<Element> = listOf(),
+    val currentText: String = ""
 )

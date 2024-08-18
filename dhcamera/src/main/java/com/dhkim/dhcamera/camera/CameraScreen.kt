@@ -36,7 +36,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
@@ -48,8 +51,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,6 +94,7 @@ import com.dhkim.dhcamera.camera.DhCamera.TEXT_START
 import com.dhkim.dhcamera.camera.DhCamera.TOP_CENTER
 import com.dhkim.dhcamera.camera.DhCamera.TOP_END
 import com.dhkim.dhcamera.camera.DhCamera.TOP_START
+import com.dhkim.dhcamera.camera.ui.noRippleClick
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.collections.immutable.ImmutableList
@@ -112,15 +119,16 @@ typealias Permission = String
 internal fun CameraScreen(
     uiState: CameraUiState,
     sideEffect: SharedFlow<CameraSideEffect>,
-    onChangeBackgroundImage: (Int) -> Unit,
-    onSavingPhoto: () -> Unit,
-    onSavedPhoto: (String) -> Unit,
-    onTakePhoto: (Bitmap, ImageBitmap) -> Unit,
-    onResetPhoto: () -> Unit,
+    onAction: (CameraAction) -> Unit,
     onNext: (SavedUrl) -> Unit,
     onPermissionDenied: (Permission) -> Unit,
+    onNavigateToInputText: () -> Unit,
     onBack: () -> Unit
 ) {
+    var showImageBottomSheet by remember {
+        mutableStateOf(false)
+    }
+    val isPhotoTaken = uiState.bitmap != null && uiState.backgroundBitmap != null
     val backgroundItems = uiState.backgroundItems
     val context = LocalContext.current
     val controller = remember {
@@ -160,8 +168,8 @@ internal fun CameraScreen(
     }
 
     BackHandler {
-        if (uiState.bitmap != null && uiState.backgroundBitmap != null) {
-            onResetPhoto()
+        if (isPhotoTaken) {
+            onAction(CameraAction.ResetPhoto)
         } else {
             (context as? Activity)?.finish()
         }
@@ -190,8 +198,8 @@ internal fun CameraScreen(
                     modifier = Modifier
                         .padding(10.dp)
                         .clickable {
-                            if (uiState.bitmap != null && uiState.backgroundBitmap != null) {
-                                onResetPhoto()
+                            if (isPhotoTaken) {
+                                onAction(CameraAction.ResetPhoto)
                             } else {
                                 onBack()
                             }
@@ -219,19 +227,25 @@ internal fun CameraScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = padding.calculateTopPadding()
-                )
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
             Box(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .height(0.dp)
                     .weight(1f)
             ) {
-                if (uiState.bitmap != null && uiState.backgroundBitmap != null) {
+                if (isPhotoTaken) {
                     AfterTakePhotoLayout(
                         uiState = uiState,
-                        resultGraphicsLayer = resultGraphicsLayer
+                        resultGraphicsLayer = resultGraphicsLayer,
+                        onTextOptionClick = {
+                            onNavigateToInputText()
+                        },
+                        onImageOptionClick = {
+                            showImageBottomSheet = true
+                        }
                     )
                 } else {
                     BeforeTakePhotoLayout(
@@ -249,7 +263,7 @@ internal fun CameraScreen(
                     .height(180.dp)
                     .background(color = Color.White)
             ) {
-                if (uiState.backgroundBitmap != null && uiState.bitmap != null) {
+                if (isPhotoTaken) {
                     AfterTakePhotoBottomLayout(
                         context = context,
                         resultGraphicsLayer = resultGraphicsLayer,
@@ -257,9 +271,7 @@ internal fun CameraScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.Center),
-                        onSavingPhoto = onSavingPhoto,
-                        onSavedPhoto = onSavedPhoto,
-                        onResetPhoto = onResetPhoto
+                        onAction = onAction
                     )
                 } else {
                     BeforeTakePhotoBottomLayout(
@@ -267,8 +279,7 @@ internal fun CameraScreen(
                         graphicsLayer = graphicsLayer,
                         controller = controller,
                         backgroundItems = backgroundItems.toImmutableList(),
-                        onChangeBackgroundImage = onChangeBackgroundImage,
-                        onTakePhoto = onTakePhoto
+                        onAction = onAction
                     )
                 }
             }
@@ -277,7 +288,7 @@ internal fun CameraScreen(
 }
 
 @Composable
-fun BeforeTakePhotoLayout(
+internal fun BeforeTakePhotoLayout(
     controller: LifecycleCameraController,
     graphicsLayer: GraphicsLayer,
     backgroundItems: ImmutableList<BackgroundItem>,
@@ -362,15 +373,18 @@ fun BeforeTakePhotoLayout(
 @Composable
 internal fun AfterTakePhotoLayout(
     uiState: CameraUiState,
-    resultGraphicsLayer: GraphicsLayer
+    resultGraphicsLayer: GraphicsLayer,
+    onTextOptionClick: () -> Unit,
+    onImageOptionClick: () -> Unit
 ) {
-    Box(modifier = Modifier
-        .drawWithContent {
-            resultGraphicsLayer.record {
-                this@drawWithContent.drawContent()
+    Box(
+        modifier = Modifier
+            .drawWithContent {
+                resultGraphicsLayer.record {
+                    this@drawWithContent.drawContent()
+                }
+                drawLayer(resultGraphicsLayer)
             }
-            drawLayer(resultGraphicsLayer)
-        }
     ) {
         Image(
             bitmap = uiState.bitmap!!.asImageBitmap(),
@@ -388,6 +402,11 @@ internal fun AfterTakePhotoLayout(
                 .fillMaxSize()
         )
 
+        PhotoOptions(
+            onTextOptionClick = onTextOptionClick,
+            onImageOptionClick = onImageOptionClick
+        )
+
         if (uiState.isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
@@ -401,13 +420,65 @@ internal fun AfterTakePhotoLayout(
 }
 
 @Composable
-fun BeforeTakePhotoBottomLayout(
+internal fun PhotoOptions(
+    onTextOptionClick: () -> Unit,
+    onImageOptionClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_text_field_white),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .clip(CircleShape)
+                    .size(48.dp)
+                    .background(color = colorResource(id = R.color.black_40))
+                    .padding(10.dp)
+                    .noRippleClick {
+                        onTextOptionClick()
+                    }
+            )
+            Image(
+                painter = painterResource(id = R.drawable.ic_emoji_white),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(48.dp)
+                    .background(color = colorResource(id = R.color.black_40))
+                    .padding(10.dp)
+                    .noRippleClick {
+                        onImageOptionClick()
+                    }
+            )
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+private fun PhotoOptionsPreview() {
+    PhotoOptions(
+        onTextOptionClick = {},
+        onImageOptionClick = {}
+    )
+}
+
+@Composable
+internal fun BeforeTakePhotoBottomLayout(
     context: Context,
     graphicsLayer: GraphicsLayer,
     controller: LifecycleCameraController,
     backgroundItems: ImmutableList<BackgroundItem>,
-    onChangeBackgroundImage: (Int) -> Unit,
-    onTakePhoto: (Bitmap, ImageBitmap) -> Unit
+    onAction: (CameraAction) -> Unit
 ) {
     val configuration = LocalConfiguration.current
     val proportion = ((configuration.screenHeightDp - 180) / 64)
@@ -437,7 +508,7 @@ fun BeforeTakePhotoBottomLayout(
                                 }
                             }
                             .clickable {
-                                onChangeBackgroundImage(index)
+                                onAction(CameraAction.ChangeBackgroundImage(selectedIndex = index))
                             }
                     ) {
                         if (DhCamera.getThumbnailBackground() != null) {
@@ -519,7 +590,7 @@ fun BeforeTakePhotoBottomLayout(
                         context = context,
                         controller = controller,
                         backgroundImageBitmap = graphicsLayer.toImageBitmap(),
-                        onPhotoTaken = onTakePhoto,
+                        onAction = onAction
                     )
                 }
             }
@@ -528,7 +599,7 @@ fun BeforeTakePhotoBottomLayout(
 }
 
 @Composable
-fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
+internal fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -593,9 +664,8 @@ fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
     }
 }
 
-
 @Composable
-fun BackgroundTextThumbnailLayout(item: BackgroundItem.BackgroundTextItem) {
+internal fun BackgroundTextThumbnailLayout(item: BackgroundItem.BackgroundTextItem) {
     val configuration = LocalConfiguration.current
     val proportion = ((configuration.screenHeightDp - 180) / 64)
 
@@ -647,14 +717,12 @@ fun BackgroundTextThumbnailLayout(item: BackgroundItem.BackgroundTextItem) {
 }
 
 @Composable
-fun AfterTakePhotoBottomLayout(
+internal fun AfterTakePhotoBottomLayout(
     context: Context,
     resultGraphicsLayer: GraphicsLayer,
     folderName: String,
     modifier: Modifier,
-    onSavingPhoto: () -> Unit,
-    onSavedPhoto: (String) -> Unit,
-    onResetPhoto: () -> Unit
+    onAction: (CameraAction) -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -670,7 +738,7 @@ fun AfterTakePhotoBottomLayout(
                     .height(72.dp)
                     .background(color = colorResource(id = R.color.primary))
                     .clickable {
-                        onResetPhoto()
+                        onAction(CameraAction.ResetPhoto)
                     }
             ) {
                 Image(
@@ -691,7 +759,7 @@ fun AfterTakePhotoBottomLayout(
                     .height(72.dp)
                     .align(Alignment.CenterVertically)
                     .clickable {
-                        onResetPhoto()
+                        onAction(CameraAction.ResetPhoto)
                     }
             )
         }
@@ -709,8 +777,7 @@ fun AfterTakePhotoBottomLayout(
                                 bitmap = resultGraphicsLayer.toImageBitmap(),
                                 folderName = folderName.ifEmpty { "DhPicture" },
                                 context = context,
-                                onSavingPhoto = onSavingPhoto,
-                                onSavedPhoto = onSavedPhoto
+                                onAction = onAction
                             )
                         }
                     }
@@ -738,8 +805,7 @@ fun AfterTakePhotoBottomLayout(
                                 bitmap = resultGraphicsLayer.toImageBitmap(),
                                 folderName = folderName.ifEmpty { "DhPicture" },
                                 context = context,
-                                onSavingPhoto = onSavingPhoto,
-                                onSavedPhoto = onSavedPhoto
+                                onAction = onAction
                             )
                         }
                     }
@@ -748,7 +814,7 @@ fun AfterTakePhotoBottomLayout(
     }
 }
 
-fun Int.toAlignment() = when (this) {
+internal fun Int.toAlignment() = when (this) {
     TOP_START -> Alignment.TopStart
     TOP_CENTER -> Alignment.TopCenter
     TOP_END -> Alignment.TopEnd
@@ -763,7 +829,7 @@ fun Int.toAlignment() = when (this) {
     }
 }
 
-fun Int.toTextAlignment() = when (this) {
+internal fun Int.toTextAlignment() = when (this) {
     TEXT_START -> TextAlign.Start
     TEXT_END -> TextAlign.End
     TEXT_CENTER -> TextAlign.Center
@@ -771,7 +837,7 @@ fun Int.toTextAlignment() = when (this) {
 }
 
 @Composable
-fun CameraButton(modifier: Modifier = Modifier, onPhotoTaken: () -> Unit) {
+internal fun CameraButton(modifier: Modifier = Modifier, onPhotoTaken: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
@@ -800,13 +866,12 @@ private suspend fun savePhoto(
     folderName: String,
     context: Context,
     bitmap: ImageBitmap,
-    onSavingPhoto: () -> Unit,
-    onSavedPhoto: (String) -> Unit
+    onAction: (CameraAction) -> Unit
 ) {
-    onSavingPhoto()
+    onAction(CameraAction.SavingPhoto)
     withContext(NonCancellable) {
         val savedUrl = saveBitmap(context = context, bitmap = bitmap, folderName = folderName)
-        onSavedPhoto(savedUrl)
+        onAction(CameraAction.SavedPhoto(savedUrl = savedUrl))
     }
 }
 
@@ -878,7 +943,7 @@ private fun takePhoto(
     context: Context,
     controller: LifecycleCameraController,
     backgroundImageBitmap: ImageBitmap,
-    onPhotoTaken: (Bitmap, ImageBitmap) -> Unit,
+    onAction: (CameraAction) -> Unit,
 ) {
     controller.takePicture(
         ContextCompat.getMainExecutor(context),
@@ -898,7 +963,12 @@ private fun takePhoto(
                     matrix,
                     true
                 )
-                onPhotoTaken(rotatedBitmap, backgroundImageBitmap)
+                onAction(
+                    CameraAction.TakePhoto(
+                        bitmap = rotatedBitmap,
+                        backgroundBitmap = backgroundImageBitmap
+                    )
+                )
             }
 
             override fun onError(exception: ImageCaptureException) {
