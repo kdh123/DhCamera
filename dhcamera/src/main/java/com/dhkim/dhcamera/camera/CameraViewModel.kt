@@ -1,9 +1,18 @@
 package com.dhkim.dhcamera.camera
 
 import android.graphics.Bitmap
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dhkim.dhcamera.R
+import com.dhkim.dhcamera.camera.model.Element
+import com.dhkim.dhcamera.camera.model.SelectColorElement
+import com.dhkim.dhcamera.camera.model.SelectFontElement
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -17,6 +26,36 @@ internal class CameraViewModel : ViewModel() {
 
     private val _sideEffect = MutableSharedFlow<CameraSideEffect>()
     val sideEffect = _sideEffect.asSharedFlow()
+
+    var fontElements: ImmutableList<SelectFontElement> by mutableStateOf(
+        DhCamera.getFontElements().mapIndexed { index, fontElement ->
+            SelectFontElement(
+                isSelected = index == 0,
+                font = fontElement
+            )
+        }.toImmutableList()
+    )
+
+    var colorElements: ImmutableList<SelectColorElement> by mutableStateOf(
+        listOf(
+            R.color.white,
+            R.color.black,
+            R.color.blue,
+            R.color.purple_200,
+            R.color.teal_200,
+            R.color.teal_700,
+            R.color.purple_500,
+            R.color.red,
+            R.color.orange,
+            R.color.sky_blue,
+            R.color.yellow
+        ).mapIndexed { index, color ->
+            SelectColorElement(
+                isSelected = index == 0,
+                color = color
+            )
+        }.toImmutableList()
+    )
 
     internal fun onAction(action: CameraAction) {
         when (action) {
@@ -42,6 +81,49 @@ internal class CameraViewModel : ViewModel() {
 
             is CameraAction.Typing -> {
                 _uiState.value = _uiState.value.copy(currentText = action.text)
+            }
+
+            is CameraAction.ChangeFont -> {
+                fontElements = fontElements.mapIndexed { index, selectFontElement ->
+                    selectFontElement.copy(isSelected = index == action.selectedIndex)
+                }.toImmutableList()
+            }
+
+            is CameraAction.ChangeFontColor -> {
+                colorElements = colorElements.mapIndexed { index, selectColorElement ->
+                    selectColorElement.copy(isSelected = index == action.selectedIndex)
+                }.toImmutableList()
+            }
+
+            CameraAction.AddText -> {
+                val text = _uiState.value.currentText
+                val font = fontElements.firstOrNull { it.isSelected }?.font?.font
+                val color = colorElements.firstOrNull { it.isSelected }?.color ?: R.color.white
+
+                val updateElements = _uiState.value.elements.toMutableList()
+                    .apply {
+                        val element = Element.Text(text = text, font = font, color = color)
+                        add(element)
+                    }
+                _uiState.value = _uiState.value.copy(elements = updateElements)
+            }
+
+            is CameraAction.ChangeElementProperties -> {
+                val index = _uiState.value.elements.indexOfFirst { it._id == action.id }
+                if (index < 0) {
+                    return
+                }
+
+                val element = _uiState.value.elements[index]
+                element.run {
+                    _scale *= action.scale
+                    _rotation += action.rotation
+                    _offset += (action.offset * action.scale).rotate(action.rotation)
+                }
+                val updateElements = _uiState.value.elements.toMutableList().apply {
+                    set(index, element)
+                }
+                _uiState.value = _uiState.value.copy(elements = updateElements)
             }
         }
     }

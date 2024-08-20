@@ -14,11 +14,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import com.dhkim.dhcamera.camera.CameraScreen
 import com.dhkim.dhcamera.camera.CameraViewModel
-import com.dhkim.dhcamera.camera.DhCamera
 import com.dhkim.dhcamera.camera.InputTextScreen
 import com.dhkim.dhcamera.camera.Permission
 import com.dhkim.dhcamera.camera.SavedUrl
-import kotlinx.collections.immutable.toImmutableList
 
 const val CAMERA_MAIN_ROUTE = "camera_main"
 const val CAMERA_ROUTE = "camera"
@@ -69,7 +67,8 @@ fun NavGraphBuilder.cameraMainNavigation(
             InputTextScreen(
                 uiState = uiState,
                 onAction = viewModel::onAction,
-                fonts = DhCamera.getFontElements().toImmutableList(),
+                fonts = viewModel.fontElements,
+                colors = viewModel.colorElements,
                 onBack = navController::navigateUp
             )
         }

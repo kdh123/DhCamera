@@ -26,6 +26,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,10 +63,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -94,6 +99,7 @@ import com.dhkim.dhcamera.camera.DhCamera.TEXT_START
 import com.dhkim.dhcamera.camera.DhCamera.TOP_CENTER
 import com.dhkim.dhcamera.camera.DhCamera.TOP_END
 import com.dhkim.dhcamera.camera.DhCamera.TOP_START
+import com.dhkim.dhcamera.camera.model.Element
 import com.dhkim.dhcamera.camera.ui.noRippleClick
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -110,6 +116,9 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 typealias SavedUrl = String
 typealias Permission = String
@@ -239,6 +248,7 @@ internal fun CameraScreen(
                 if (isPhotoTaken) {
                     AfterTakePhotoLayout(
                         uiState = uiState,
+                        onAction = onAction,
                         resultGraphicsLayer = resultGraphicsLayer,
                         onTextOptionClick = {
                             onNavigateToInputText()
@@ -373,50 +383,121 @@ internal fun BeforeTakePhotoLayout(
 @Composable
 internal fun AfterTakePhotoLayout(
     uiState: CameraUiState,
+    onAction: (CameraAction) -> Unit,
     resultGraphicsLayer: GraphicsLayer,
     onTextOptionClick: () -> Unit,
     onImageOptionClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .drawWithContent {
-                resultGraphicsLayer.record {
-                    this@drawWithContent.drawContent()
-                }
-                drawLayer(resultGraphicsLayer)
-            }
+            .fillMaxSize()
     ) {
-        Image(
-            bitmap = uiState.bitmap!!.asImageBitmap(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-        )
+                .drawWithContent {
+                    resultGraphicsLayer.record {
+                        this@drawWithContent.drawContent()
+                    }
+                    drawLayer(resultGraphicsLayer)
+                }
+        ) {
+            Image(
+                bitmap = uiState.bitmap!!.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+            )
 
-        Image(
-            bitmap = uiState.backgroundBitmap!!,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-        )
+            Image(
+                bitmap = uiState.backgroundBitmap!!,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+
+            uiState.elements.forEach {
+                Elements(element = it, onAction = onAction)
+            }
+
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .width(64.dp)
+                        .align(Alignment.Center),
+                    color = Color.White,
+                    trackColor = colorResource(id = R.color.gray)
+                )
+            }
+        }
 
         PhotoOptions(
             onTextOptionClick = onTextOptionClick,
             onImageOptionClick = onImageOptionClick
         )
+    }
+}
 
-        if (uiState.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .width(64.dp)
-                    .align(Alignment.Center),
-                color = Color.White,
-                trackColor = colorResource(id = R.color.gray)
+@Composable
+internal fun Elements(element: Element, onAction: (CameraAction) -> Unit) {
+    var scale by remember { mutableFloatStateOf(element._scale) }
+    var rotation by remember { mutableFloatStateOf(element._rotation) }
+    var offset by remember { mutableStateOf(element._offset) }
+    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+        onAction(
+            CameraAction.ChangeElementProperties(
+                id = element._id,
+                scale = zoomChange,
+                rotation = rotationChange,
+                offset = offsetChange
             )
+        )
+        scale *= zoomChange
+        rotation += rotationChange
+        offset += (offsetChange * scale).rotate(rotation)
+    }
+
+    Box(
+        modifier = Modifier
+            .graphicsLayer(
+                scaleX = scale.coerceIn(0.5f..5f),
+                scaleY = scale.coerceIn(0.5f..5f),
+                rotationZ = rotation,
+                translationX = offset.x,
+                translationY = offset.y
+            )
+            .transformable(state = state)
+    ) {
+        when (element) {
+            is Element.Image -> {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_back_black),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+            }
+
+            is Element.Text -> {
+                Text(
+                    text = element.text,
+                    fontSize = 48.sp,
+                    color = Color.White,
+                    modifier = Modifier
+                        //.fillMaxSize()
+                )
+            }
         }
     }
+}
+
+fun Offset.rotate(rotation: Float): Offset {
+    val angleInRadians = rotation * PI / 180
+    return Offset(
+        (x * cos(angleInRadians) - y * sin(angleInRadians)).toFloat(),
+        (x * sin(angleInRadians) + y * cos(angleInRadians)).toFloat()
+    )
 }
 
 @Composable

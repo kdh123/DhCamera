@@ -1,8 +1,10 @@
 package com.dhkim.dhcamera.camera
 
-import android.graphics.Typeface
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -37,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -54,8 +58,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dhkim.dhcamera.R
-import com.dhkim.dhcamera.camera.model.FontItem
+import com.dhkim.dhcamera.camera.model.FontElement
+import com.dhkim.dhcamera.camera.model.SelectColorElement
+import com.dhkim.dhcamera.camera.model.SelectFontElement
 import com.dhkim.dhcamera.camera.ui.noRippleClick
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -66,13 +73,13 @@ import kotlin.math.roundToInt
 internal fun InputTextScreen(
     uiState: CameraUiState,
     onAction: (CameraAction) -> Unit,
-    fonts: ImmutableList<FontItem>,
+    fonts: ImmutableList<SelectFontElement>,
+    colors: ImmutableList<SelectColorElement>,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
-    var font: Typeface? by remember {
-        mutableStateOf(null)
-    }
+    val font = fonts.firstOrNull { it.isSelected }?.font?.font
+    val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -89,6 +96,25 @@ internal fun InputTextScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+            ) {
+                Text(
+                    text = "완료",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .align(Alignment.CenterEnd)
+                        .noRippleClick {
+                            onAction(CameraAction.AddText)
+                            onBack()
+                        }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
                     .height(0.dp)
                     .weight(1f)
             ) {
@@ -98,12 +124,12 @@ internal fun InputTextScreen(
                         onAction(CameraAction.Typing(text = it))
                     },
                     textStyle = LocalTextStyle.current.copy(
-                        color = Color.White,
+                        color = colorResource(id = color),
                         fontSize = TextUnit(24f, TextUnitType.Sp),
                         fontFamily = if (font == null) {
                             null
                         } else {
-                            FontFamily(font!!)
+                            FontFamily(font)
                         }
                     ),
                     cursorBrush = SolidColor(Color.White),
@@ -123,8 +149,12 @@ internal fun InputTextScreen(
 
             TextOptions(
                 fonts = fonts,
+                colors = colors,
                 onFontChanged = {
-                    font = it
+                    onAction(CameraAction.ChangeFont(it))
+                },
+                onColorChanged = {
+                    onAction(CameraAction.ChangeFontColor(it))
                 }
             )
         }
@@ -134,28 +164,55 @@ internal fun InputTextScreen(
 @Preview(showBackground = true)
 @Composable
 private fun InputTextScreenPreview() {
-    val fonts = mutableListOf<FontItem>().apply {
+    val fonts = mutableListOf<FontElement>().apply {
         repeat(10) {
             add(
-                FontItem(
+                FontElement(
                     text = "폰트 $it"
                 )
             )
         }
+    }.mapIndexed { index, fontElement ->
+        SelectFontElement(
+            isSelected = index == 0,
+            font = fontElement
+        )
+    }.toImmutableList()
+
+    val colors = listOf(
+        R.color.white,
+        R.color.black,
+        R.color.primary,
+        R.color.purple_200,
+        R.color.teal_200,
+        R.color.teal_700,
+        R.color.purple_500,
+        R.color.red,
+        R.color.orange,
+        R.color.sky_blue,
+        R.color.yellow
+    ).mapIndexed { index, color ->
+        SelectColorElement(
+            isSelected = index == 0,
+            color = color
+        )
     }.toImmutableList()
 
     InputTextScreen(
-        uiState = CameraUiState(),
+        uiState = CameraUiState(currentText = "Hello World!"),
         onAction = {},
         fonts = fonts,
+        colors = colors,
         onBack = {}
     )
 }
 
 @Composable
 internal fun TextOptions(
-    fonts: ImmutableList<FontItem>,
-    onFontChanged: (Typeface) -> Unit
+    fonts: ImmutableList<SelectFontElement>,
+    colors: ImmutableList<SelectColorElement>,
+    onFontChanged: (Int) -> Unit,
+    onColorChanged: (Int) -> Unit
 ) {
     var currentOptionIndex by remember {
         mutableIntStateOf(0)
@@ -165,18 +222,24 @@ internal fun TextOptions(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
+            .padding(bottom = 10.dp)
     ) {
+        FontsLayout(
+            currentOptionIndex = currentOptionIndex,
+            fonts = fonts,
+            onFontChanged = onFontChanged,
+        )
+
         when (currentOptionIndex) {
             0 -> {
-                FontsLayout(
-                    fonts = fonts,
-                    onFontChanged = onFontChanged
-                )
+
             }
 
             1 -> {
-
+                ColorsLayout(
+                    colors = colors,
+                    onColorChanged = onColorChanged
+                )
             }
 
             2 -> {
@@ -218,15 +281,84 @@ internal fun TextOptions(
 }
 
 @Composable
+internal fun ColorsLayout(
+    colors: ImmutableList<SelectColorElement>,
+    onColorChanged: (Int) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
+        val selectedColor = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(color = colorResource(id = selectedColor))
+                .border(
+                    width = 3.dp,
+                    color = colorResource(id = R.color.white),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .size(48.dp)
+        ) {
+            Image(
+                painter = if (selectedColor == R.color.white) {
+                    painterResource(id = R.drawable.ic_colorize_black)
+                } else {
+                    painterResource(id = R.drawable.ic_colorize_white)
+                },
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .align(Alignment.Center)
+                    .padding(12.dp)
+            )
+        }
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            itemsIndexed(items = colors, key = { index, _ ->
+                index
+            }) { index, colorElement ->
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(color = colorResource(id = colorElement.color))
+                        .border(
+                            width = 1.dp,
+                            color = colorResource(id = R.color.white),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .size(32.dp)
+                        .noRippleClick {
+                            onColorChanged(index)
+                        }
+                )
+            }
+        }
+
+    }
+}
+
+@SuppressLint("CoroutineCreationDuringComposition")
+@Composable
 internal fun FontsLayout(
-    fonts: ImmutableList<FontItem>,
-    onFontChanged: (Typeface) -> Unit
+    currentOptionIndex: Int,
+    fonts: ImmutableList<SelectFontElement>,
+    onFontChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var centerOffset by remember { mutableStateOf(Offset(0f, 0f)) }
     val state = rememberLazyListState()
-    var selectedIndex by remember {
-        mutableIntStateOf(0)
+    val selectedIndex = fonts.indexOfFirst { it.isSelected }
+    Log.e("selectedIndex", "selected: $selectedIndex")
+    var scrollIndex by remember {
+        mutableIntStateOf(fonts.indexOfFirst { it.isSelected })
     }
+
     var firstItemWidth by remember {
         mutableFloatStateOf(0f)
     }
@@ -244,10 +376,26 @@ internal fun FontsLayout(
     val pxValue = with(LocalDensity.current) { dpValue.toPx() }
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(System.currentTimeMillis()) {
+        //state.scrollToItem(selectedIndex)
+    }
+
     LazyRow(
-        modifier = Modifier
+        userScrollEnabled = currentOptionIndex == 0,
+        modifier = modifier
             .fillMaxWidth()
+            .alpha(
+                if (currentOptionIndex == 0) {
+                    1f
+                } else {
+                    0f
+                }
+            )
             .onGloballyPositioned { layoutCoordinates ->
+                if (currentOptionIndex != 0) {
+                    return@onGloballyPositioned
+                }
+
                 val size = layoutCoordinates.size
                 val position = layoutCoordinates.positionInRoot()
                 if (parentWidth <= 0) {
@@ -277,24 +425,24 @@ internal fun FontsLayout(
     ) {
         itemsIndexed(items = fonts, key = { index, _ ->
             index
-        }) { index, font ->
+        }) { index, fontElement ->
             Text(
-                text = font.text,
-                color = if (selectedIndex == index) {
+                text = fontElement.font.text,
+                color = if (scrollIndex == index) {
                     colorResource(id = R.color.black)
                 } else {
                     colorResource(id = R.color.white)
                 },
-                fontFamily = if (font.font == null) {
+                fontFamily = if (fontElement.font.font == null) {
                     null
                 } else {
-                    FontFamily(font.font!!)
+                    FontFamily(fontElement.font.font!!)
                 },
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(5.dp))
                     .background(
-                        color = if (selectedIndex == index) {
+                        color = if (scrollIndex == index) {
                             Color.White
                         } else {
                             colorResource(id = R.color.black_50)
@@ -302,15 +450,23 @@ internal fun FontsLayout(
                     )
                     .padding(10.dp)
                     .clickable {
+                        if (currentOptionIndex != 0) {
+                            return@clickable
+                        }
                         scope.launch {
+                            Log.e("index23333", "result : $index")
                             state.animateScrollToItem(
                                 index = index,
                                 scrollOffset = pxValue.roundToInt()
                             )
-                            onFontChanged(fonts[selectedIndex].font!!)
+                            onFontChanged(index)
                         }
                     }
                     .onGloballyPositioned { layoutCoordinates ->
+                        if (currentOptionIndex != 0) {
+                            return@onGloballyPositioned
+                        }
+
                         val size = layoutCoordinates.size
                         val position = layoutCoordinates.positionInRoot()
                         if (firstItemWidth <= 0 && index == 0) {
@@ -320,16 +476,16 @@ internal fun FontsLayout(
                             lastItemWidth = size.width / 2f
                         }
 
-                        selectedIndex = if (
+                        scrollIndex = if (
                             centerOffset.x >= position.x
                             && centerOffset.x < (position.x + size.width)
                         ) {
                             index
                         } else {
-                            selectedIndex
+                            scrollIndex
                         }
 
-                        onFontChanged(fonts[selectedIndex].font!!)
+                        onFontChanged(scrollIndex)
                     }
             )
         }

@@ -1,17 +1,27 @@
 package com.dhkim.dhcamera.camera.model
 
+import android.graphics.Typeface
 import androidx.annotation.ColorRes
+import androidx.compose.ui.geometry.Offset
 import com.dhkim.dhcamera.R
 
-sealed interface Element {
+sealed class Element(val _id: String, var _scale: Float, var _rotation: Float, var _offset: Offset) {
 
     data class Text(
+        val id: String = "${System.currentTimeMillis()}",
         val text: String,
-        val font: Int = -1,
-        @ColorRes val color: Int = R.color.black
-    )
+        val font: Typeface? = null,
+        @ColorRes val color: Int = R.color.black,
+        val scale: Float = 1f,
+        val rotation: Float = 0f,
+        val offset: Offset = Offset.Zero
+    ): Element(id, scale, rotation, offset)
 
     data class Image(
+        val id: String = "${System.currentTimeMillis()}",
         val imageUri: Any = "",
-    )
+        val scale: Float = 1f,
+        val rotation: Float = 0f,
+        val offset: Offset = Offset.Zero
+    ): Element(id, scale, rotation, offset)
 }

@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Typeface
 import androidx.core.content.res.ResourcesCompat
 
-class FontItem(
+class FontElement(
     internal var text: String = "ABC",
     internal var font: Typeface? = null
 ) {
@@ -28,8 +28,8 @@ class FontItem(
             return this
         }
 
-        fun build(): FontItem {
-            return FontItem(
+        fun build(): FontElement {
+            return FontElement(
                 text = text,
                 font = font
             )
