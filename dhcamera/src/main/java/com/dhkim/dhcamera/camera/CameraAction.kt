@@ -12,6 +12,7 @@ sealed interface CameraAction {
     data class TakePhoto(val bitmap: Bitmap, val backgroundBitmap: ImageBitmap) : CameraAction
     data object ResetPhoto : CameraAction
     data class Typing(val text: String) : CameraAction
+    data object ClearText: CameraAction
 
     data class ChangeFont(val selectedIndex: Int) : CameraAction
     data class ChangeFontColor(val selectedIndex: Int) : CameraAction

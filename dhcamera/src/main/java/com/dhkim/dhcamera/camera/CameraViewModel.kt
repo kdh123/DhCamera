@@ -35,7 +35,6 @@ internal class CameraViewModel : ViewModel() {
             )
         }.toImmutableList()
     )
-
     var colorElements: ImmutableList<SelectColorElement> by mutableStateOf(
         listOf(
             R.color.white,
@@ -102,7 +101,11 @@ internal class CameraViewModel : ViewModel() {
 
                 val updateElements = _uiState.value.elements.toMutableList()
                     .apply {
-                        val element = Element.Text(text = text, font = font, color = color)
+                        val element = Element.Text(
+                            text = text,
+                            font = font,
+                            color = color
+                        )
                         add(element)
                     }
                 _uiState.value = _uiState.value.copy(elements = updateElements)
@@ -124,6 +127,10 @@ internal class CameraViewModel : ViewModel() {
                     set(index, element)
                 }
                 _uiState.value = _uiState.value.copy(elements = updateElements)
+            }
+
+            CameraAction.ClearText -> {
+                _uiState.value = _uiState.value.copy(currentText = "")
             }
         }
     }

@@ -123,7 +123,7 @@ import kotlin.math.sin
 typealias SavedUrl = String
 typealias Permission = String
 
-@SuppressLint("MissingPermission")
+@SuppressLint("MissingPermission", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 internal fun CameraScreen(
     uiState: CameraUiState,
@@ -418,7 +418,12 @@ internal fun AfterTakePhotoLayout(
             )
 
             uiState.elements.forEach {
-                Elements(element = it, onAction = onAction)
+                ElementView(
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    element = it,
+                    onAction = onAction
+                )
             }
 
             if (uiState.isLoading) {
@@ -440,7 +445,11 @@ internal fun AfterTakePhotoLayout(
 }
 
 @Composable
-internal fun Elements(element: Element, onAction: (CameraAction) -> Unit) {
+internal fun ElementView(
+    element: Element,
+    modifier: Modifier = Modifier,
+    onAction: (CameraAction) -> Unit
+) {
     var scale by remember { mutableFloatStateOf(element._scale) }
     var rotation by remember { mutableFloatStateOf(element._rotation) }
     var offset by remember { mutableStateOf(element._offset) }
@@ -459,7 +468,8 @@ internal fun Elements(element: Element, onAction: (CameraAction) -> Unit) {
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
+            .padding(15.dp)
             .graphicsLayer(
                 scaleX = scale.coerceIn(0.5f..5f),
                 scaleY = scale.coerceIn(0.5f..5f),
@@ -483,9 +493,12 @@ internal fun Elements(element: Element, onAction: (CameraAction) -> Unit) {
                 Text(
                     text = element.text,
                     fontSize = 48.sp,
-                    color = Color.White,
-                    modifier = Modifier
-                        //.fillMaxSize()
+                    color = colorResource(id = element.color),
+                    fontFamily = if (element.font == null) {
+                        null
+                    } else {
+                        FontFamily(element.font)
+                    }
                 )
             }
         }

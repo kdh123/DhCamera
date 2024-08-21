@@ -82,6 +82,7 @@ internal fun InputTextScreen(
     val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
 
     LaunchedEffect(Unit) {
+        onAction(CameraAction.ClearText)
         focusRequester.requestFocus()
     }
 
@@ -339,7 +340,6 @@ internal fun ColorsLayout(
                 )
             }
         }
-
     }
 }
 
@@ -353,8 +353,6 @@ internal fun FontsLayout(
 ) {
     var centerOffset by remember { mutableStateOf(Offset(0f, 0f)) }
     val state = rememberLazyListState()
-    val selectedIndex = fonts.indexOfFirst { it.isSelected }
-    Log.e("selectedIndex", "selected: $selectedIndex")
     var scrollIndex by remember {
         mutableIntStateOf(fonts.indexOfFirst { it.isSelected })
     }
@@ -375,10 +373,6 @@ internal fun FontsLayout(
     val dpValue = 10.dp
     val pxValue = with(LocalDensity.current) { dpValue.toPx() }
     val scope = rememberCoroutineScope()
-
-    LaunchedEffect(System.currentTimeMillis()) {
-        //state.scrollToItem(selectedIndex)
-    }
 
     LazyRow(
         userScrollEnabled = currentOptionIndex == 0,
