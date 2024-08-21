@@ -54,17 +54,21 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dhkim.dhcamera.R
+import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.FontElement
 import com.dhkim.dhcamera.camera.model.SelectColorElement
+import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
 import com.dhkim.dhcamera.camera.model.SelectFontElement
 import com.dhkim.dhcamera.camera.ui.noRippleClick
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -75,11 +79,21 @@ internal fun InputTextScreen(
     onAction: (CameraAction) -> Unit,
     fonts: ImmutableList<SelectFontElement>,
     colors: ImmutableList<SelectColorElement>,
+    alignments: ImmutableList<SelectFontAlignElement>,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
     val font = fonts.firstOrNull { it.isSelected }?.font?.font
     val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
+    val alignment = alignments.firstOrNull { it.isSelected }?.alignment
+        .run {
+            when (this) {
+                FontAlign.Center -> TextAlign.Center
+                FontAlign.Left -> TextAlign.Start
+                FontAlign.Right -> TextAlign.End
+                null -> TextAlign.Center
+            }
+        }
 
     LaunchedEffect(Unit) {
         onAction(CameraAction.ClearText)
@@ -131,7 +145,8 @@ internal fun InputTextScreen(
                             null
                         } else {
                             FontFamily(font)
-                        }
+                        },
+                        textAlign = alignment
                     ),
                     cursorBrush = SolidColor(Color.White),
                     modifier = Modifier
@@ -151,11 +166,15 @@ internal fun InputTextScreen(
             TextOptions(
                 fonts = fonts,
                 colors = colors,
+                alignments = alignments,
                 onFontChanged = {
                     onAction(CameraAction.ChangeFont(it))
                 },
                 onColorChanged = {
                     onAction(CameraAction.ChangeFontColor(it))
+                },
+                onFontAlignChanged = {
+                    onAction(CameraAction.ChangeFontAlign)
                 }
             )
         }
@@ -204,6 +223,7 @@ private fun InputTextScreenPreview() {
         onAction = {},
         fonts = fonts,
         colors = colors,
+        alignments = persistentListOf(),
         onBack = {}
     )
 }
@@ -212,8 +232,10 @@ private fun InputTextScreenPreview() {
 internal fun TextOptions(
     fonts: ImmutableList<SelectFontElement>,
     colors: ImmutableList<SelectColorElement>,
+    alignments: ImmutableList<SelectFontAlignElement>,
     onFontChanged: (Int) -> Unit,
-    onColorChanged: (Int) -> Unit
+    onColorChanged: (Int) -> Unit,
+    onFontAlignChanged: () -> Unit
 ) {
     var currentOptionIndex by remember {
         mutableIntStateOf(0)
@@ -232,19 +254,11 @@ internal fun TextOptions(
         )
 
         when (currentOptionIndex) {
-            0 -> {
-
-            }
-
             1 -> {
                 ColorsLayout(
                     colors = colors,
                     onColorChanged = onColorChanged
                 )
-            }
-
-            2 -> {
-
             }
         }
 
@@ -270,11 +284,21 @@ internal fun TextOptions(
                 }
             )
 
+            val fontAlignDrawable = alignments.firstOrNull { it.isSelected }?.alignment
+                .run {
+                    when (this) {
+                        FontAlign.Center -> R.drawable.ic_align_center_white
+                        FontAlign.Left -> R.drawable.ic_align_left_white
+                        FontAlign.Right -> R.drawable.ic_align_right_white
+                        null -> R.drawable.ic_align_center_white
+                    }
+                }
+
             TextOption(
-                drawableResId = R.drawable.ic_align_center_white,
+                drawableResId = fontAlignDrawable,
                 isSelected = currentOptionIndex == 2,
                 onClick = {
-                    currentOptionIndex = 2
+                    onFontAlignChanged()
                 }
             )
         }

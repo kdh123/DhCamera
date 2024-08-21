@@ -100,6 +100,7 @@ import com.dhkim.dhcamera.camera.DhCamera.TOP_CENTER
 import com.dhkim.dhcamera.camera.DhCamera.TOP_END
 import com.dhkim.dhcamera.camera.DhCamera.TOP_START
 import com.dhkim.dhcamera.camera.model.Element
+import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.ui.noRippleClick
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -498,6 +499,11 @@ internal fun ElementView(
                         null
                     } else {
                         FontFamily(element.font)
+                    },
+                    textAlign = when (element.alignment) {
+                        FontAlign.Center -> TextAlign.Center
+                        FontAlign.Left -> TextAlign.Start
+                        FontAlign.Right -> TextAlign.End
                     }
                 )
             }

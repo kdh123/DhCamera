@@ -9,7 +9,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dhkim.dhcamera.R
 import com.dhkim.dhcamera.camera.model.Element
+import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.SelectColorElement
+import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
 import com.dhkim.dhcamera.camera.model.SelectFontElement
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -22,12 +24,12 @@ import kotlinx.coroutines.launch
 internal class CameraViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(CameraUiState())
-    val uiState = _uiState.asStateFlow()
+    internal val uiState = _uiState.asStateFlow()
 
     private val _sideEffect = MutableSharedFlow<CameraSideEffect>()
-    val sideEffect = _sideEffect.asSharedFlow()
+    internal val sideEffect = _sideEffect.asSharedFlow()
 
-    var fontElements: ImmutableList<SelectFontElement> by mutableStateOf(
+    internal var fontElements: ImmutableList<SelectFontElement> by mutableStateOf(
         DhCamera.getFontElements().mapIndexed { index, fontElement ->
             SelectFontElement(
                 isSelected = index == 0,
@@ -35,7 +37,7 @@ internal class CameraViewModel : ViewModel() {
             )
         }.toImmutableList()
     )
-    var colorElements: ImmutableList<SelectColorElement> by mutableStateOf(
+    internal var colorElements: ImmutableList<SelectColorElement> by mutableStateOf(
         listOf(
             R.color.white,
             R.color.black,
@@ -53,6 +55,11 @@ internal class CameraViewModel : ViewModel() {
                 isSelected = index == 0,
                 color = color
             )
+        }.toImmutableList()
+    )
+    internal var fontAlignElements: ImmutableList<SelectFontAlignElement> by mutableStateOf(
+        FontAlign.entries.mapIndexed { index, fontAlign ->
+            SelectFontAlignElement(isSelected = index == 0, alignment = fontAlign)
         }.toImmutableList()
     )
 
@@ -94,17 +101,32 @@ internal class CameraViewModel : ViewModel() {
                 }.toImmutableList()
             }
 
+            CameraAction.ChangeFontAlign -> {
+                val currentSelectedIndex = fontAlignElements.indexOfFirst { it.isSelected }.apply {
+                    if (this == -1) {
+                        plus(1)
+                    }
+                }
+                fontAlignElements = fontAlignElements.mapIndexed { index, selectFontAlignElement ->
+                    selectFontAlignElement.copy(
+                        isSelected = index == (currentSelectedIndex + 1) % fontAlignElements.size
+                    )
+                }.toImmutableList()
+            }
+
             CameraAction.AddText -> {
                 val text = _uiState.value.currentText
                 val font = fontElements.firstOrNull { it.isSelected }?.font?.font
                 val color = colorElements.firstOrNull { it.isSelected }?.color ?: R.color.white
+                val alignment = fontAlignElements.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center
 
                 val updateElements = _uiState.value.elements.toMutableList()
                     .apply {
                         val element = Element.Text(
                             text = text,
                             font = font,
-                            color = color
+                            color = color,
+                            alignment = alignment
                         )
                         add(element)
                     }

@@ -11,6 +11,7 @@ sealed class Element(val _id: String, var _scale: Float, var _rotation: Float, v
         val id: String = "${System.currentTimeMillis()}",
         val text: String,
         val font: Typeface? = null,
+        val alignment: FontAlign = FontAlign.Center,
         @ColorRes val color: Int = R.color.black,
         val scale: Float = 1f,
         val rotation: Float = 0f,

@@ -69,6 +69,7 @@ fun NavGraphBuilder.cameraMainNavigation(
                 onAction = viewModel::onAction,
                 fonts = viewModel.fontElements,
                 colors = viewModel.colorElements,
+                alignments = viewModel.fontAlignElements,
                 onBack = navController::navigateUp
             )
         }
