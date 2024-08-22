@@ -34,13 +34,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -73,14 +77,18 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,7 +127,10 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 typealias SavedUrl = String
 typealias Permission = String
@@ -251,12 +262,11 @@ internal fun CameraScreen(
                         uiState = uiState,
                         onAction = onAction,
                         resultGraphicsLayer = resultGraphicsLayer,
-                        onTextOptionClick = {
-                            onNavigateToInputText()
-                        },
+                        onTextOptionClick = onNavigateToInputText,
                         onImageOptionClick = {
                             showImageBottomSheet = true
-                        }
+                        },
+                        onNavigateToInputText = onNavigateToInputText
                     )
                 } else {
                     BeforeTakePhotoLayout(
@@ -387,11 +397,34 @@ internal fun AfterTakePhotoLayout(
     onAction: (CameraAction) -> Unit,
     resultGraphicsLayer: GraphicsLayer,
     onTextOptionClick: () -> Unit,
-    onImageOptionClick: () -> Unit
+    onImageOptionClick: () -> Unit,
+    onNavigateToInputText: () -> Unit,
 ) {
+    var isDragging by remember {
+        mutableStateOf(false)
+    }
+    var showCenterPortraitLine by remember {
+        mutableStateOf(false)
+    }
+    var showCenterLandscapeLine by remember {
+        mutableStateOf(false)
+    }
+    var centerOffset by remember {
+        mutableStateOf(Offset.Zero)
+    }
+    val density = LocalDensity.current
+    val statusBarHeight = WindowInsets.statusBars.getTop(density)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .onGloballyPositioned {
+                if (centerOffset == Offset.Zero) {
+                    val x = it.size.width / 2f
+                    val y = it.size.height / 2f
+                    centerOffset = Offset(x, y)
+                }
+            }
     ) {
         Box(
             modifier = Modifier
@@ -418,12 +451,24 @@ internal fun AfterTakePhotoLayout(
                     .fillMaxSize()
             )
 
-            uiState.elements.forEach {
+            uiState.elements.forEach { element ->
                 ElementView(
+                    centerOffset = centerOffset,
+                    statusBarHeight = statusBarHeight,
+                    element = element,
                     modifier = Modifier
                         .align(Alignment.Center),
-                    element = it,
-                    onAction = onAction
+                    onAction = onAction,
+                    onNavigateToInputText = onNavigateToInputText,
+                    onCenterPortraitShow = { show ->
+                        showCenterPortraitLine = show
+                    },
+                    onCenterLandscapeShow = { show ->
+                        showCenterLandscapeLine = show
+                    },
+                    onDrag = {
+                        isDragging = it
+                    }
                 )
             }
 
@@ -438,6 +483,27 @@ internal fun AfterTakePhotoLayout(
             }
         }
 
+        if (isDragging && showCenterPortraitLine) {
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(centerOffset.x.roundToInt(), 0) }
+                    .width(2.dp)
+                    .fillMaxHeight()
+                    .background(color = colorResource(id = R.color.sky_blue))
+            )
+
+        }
+
+        if (isDragging && showCenterLandscapeLine) {
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(0, centerOffset.y.roundToInt()) }
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(color = colorResource(id = R.color.sky_blue))
+            )
+        }
+
         PhotoOptions(
             onTextOptionClick = onTextOptionClick,
             onImageOptionClick = onImageOptionClick
@@ -445,12 +511,25 @@ internal fun AfterTakePhotoLayout(
     }
 }
 
+fun calculateDistance(x1: Double, y1: Double, x2: Double, y2: Double): Double {
+    return sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
+}
+
 @Composable
 internal fun ElementView(
+    centerOffset: Offset,
+    statusBarHeight: Int,
     element: Element,
     modifier: Modifier = Modifier,
-    onAction: (CameraAction) -> Unit
+    onAction: (CameraAction) -> Unit,
+    onNavigateToInputText: () -> Unit,
+    onCenterPortraitShow: (Boolean) -> Unit,
+    onCenterLandscapeShow: (Boolean) -> Unit,
+    onDrag: (Boolean) -> Unit
 ) {
+    var elementCenterOffset by remember {
+        mutableStateOf(Offset.Zero)
+    }
     var scale by remember { mutableFloatStateOf(element._scale) }
     var rotation by remember { mutableFloatStateOf(element._rotation) }
     var offset by remember { mutableStateOf(element._offset) }
@@ -466,7 +545,21 @@ internal fun ElementView(
         scale *= zoomChange
         rotation += rotationChange
         offset += (offsetChange * scale).rotate(rotation)
+        elementCenterOffset += (offsetChange * scale).rotate(rotation)
     }
+
+    LaunchedEffect(state.isTransformInProgress) {
+        onDrag(state.isTransformInProgress)
+    }
+
+    onCenterPortraitShow(
+        elementCenterOffset.x >= centerOffset.x.roundToInt() - 5 &&
+                elementCenterOffset.x <= centerOffset.x.roundToInt() + 5
+    )
+    onCenterLandscapeShow(
+        elementCenterOffset.y >= centerOffset.y.roundToInt() - 5 &&
+                elementCenterOffset.y <= centerOffset.y.roundToInt() + 5
+    )
 
     Box(
         modifier = modifier
@@ -478,6 +571,13 @@ internal fun ElementView(
                 translationX = offset.x,
                 translationY = offset.y
             )
+            .onGloballyPositioned {
+                if (elementCenterOffset == Offset.Zero) {
+                    val centerX = (it.positionInRoot().x + (it.size.width / 2f))
+                    val centerY = (it.positionInRoot().y - statusBarHeight + (it.size.height / 2f))
+                    elementCenterOffset = Offset(centerX, centerY)
+                }
+            }
             .transformable(state = state)
     ) {
         when (element) {
@@ -504,7 +604,11 @@ internal fun ElementView(
                         FontAlign.Center -> TextAlign.Center
                         FontAlign.Left -> TextAlign.Start
                         FontAlign.Right -> TextAlign.End
-                    }
+                    },
+                    modifier = Modifier
+                        .noRippleClick {
+                            onNavigateToInputText()
+                        }
                 )
             }
         }
