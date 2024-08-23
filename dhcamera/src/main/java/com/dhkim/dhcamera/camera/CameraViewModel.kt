@@ -154,6 +154,11 @@ internal class CameraViewModel : ViewModel() {
             CameraAction.ClearText -> {
                 _uiState.value = _uiState.value.copy(currentText = "")
             }
+
+            is CameraAction.DeleteElement -> {
+                val updateElements = _uiState.value.elements.filter { it._id != action.id }
+                _uiState.value = _uiState.value.copy(elements = updateElements)
+            }
         }
     }
 

@@ -18,6 +18,7 @@ sealed interface CameraAction {
     data class ChangeFontColor(val selectedIndex: Int) : CameraAction
     data object ChangeFontAlign : CameraAction
     data object AddText : CameraAction
+    data class DeleteElement(val id: String) : CameraAction
 
     data class ChangeElementProperties(
         val id: String,

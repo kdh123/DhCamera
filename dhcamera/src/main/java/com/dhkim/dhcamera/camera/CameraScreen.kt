@@ -57,6 +57,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +66,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -88,6 +90,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -412,6 +415,12 @@ internal fun AfterTakePhotoLayout(
     var centerOffset by remember {
         mutableStateOf(Offset.Zero)
     }
+    var centerDeleteViewOffset by remember {
+        mutableStateOf(Offset.Zero)
+    }
+    var deleteViewContainElement by remember {
+        mutableStateOf(false)
+    }
     val density = LocalDensity.current
     val statusBarHeight = WindowInsets.statusBars.getTop(density)
 
@@ -454,6 +463,7 @@ internal fun AfterTakePhotoLayout(
             uiState.elements.forEach { element ->
                 ElementView(
                     centerOffset = centerOffset,
+                    centerDeleteViewOffset = centerDeleteViewOffset,
                     statusBarHeight = statusBarHeight,
                     element = element,
                     modifier = Modifier
@@ -468,6 +478,9 @@ internal fun AfterTakePhotoLayout(
                     },
                     onDrag = {
                         isDragging = it
+                    },
+                    onDeleteContained = {
+                        deleteViewContainElement = it
                     }
                 )
             }
@@ -487,7 +500,7 @@ internal fun AfterTakePhotoLayout(
             Box(
                 modifier = Modifier
                     .offset { IntOffset(centerOffset.x.roundToInt(), 0) }
-                    .width(2.dp)
+                    .width(3.dp)
                     .fillMaxHeight()
                     .background(color = colorResource(id = R.color.sky_blue))
             )
@@ -499,7 +512,7 @@ internal fun AfterTakePhotoLayout(
                 modifier = Modifier
                     .offset { IntOffset(0, centerOffset.y.roundToInt()) }
                     .fillMaxWidth()
-                    .height(2.dp)
+                    .height(3.dp)
                     .background(color = colorResource(id = R.color.sky_blue))
             )
         }
@@ -508,16 +521,78 @@ internal fun AfterTakePhotoLayout(
             onTextOptionClick = onTextOptionClick,
             onImageOptionClick = onImageOptionClick
         )
+
+        DeleteView(
+            containElement = deleteViewContainElement,
+            modifier = Modifier
+                .alpha(
+                    if (isDragging) {
+                        1f
+                    } else {
+                        0f
+                    }
+                )
+                .align(Alignment.BottomCenter)
+                .padding(18.dp)
+                .clip(CircleShape)
+                .border(
+                    width = 3.dp,
+                    color = if (deleteViewContainElement) {
+                        colorResource(id = R.color.sky_blue)
+                    } else {
+                        colorResource(id = R.color.white)
+                    },
+                    shape = CircleShape
+                )
+                .size(56.dp),
+            onInitDeleteViewCenter = {
+                centerDeleteViewOffset = it
+            }
+        )
     }
 }
 
-fun calculateDistance(x1: Double, y1: Double, x2: Double, y2: Double): Double {
+@Composable
+fun dpToPx(dp: Dp): Float {
+    return with(LocalDensity.current) { dp.toPx() }
+}
+
+@Composable
+internal fun DeleteView(
+    containElement: Boolean,
+    modifier: Modifier = Modifier,
+    onInitDeleteViewCenter: (Offset) -> Unit
+) {
+    Box(
+        modifier = modifier
+            .onGloballyPositioned {
+                val centerX = it.positionInRoot().x + (it.size.width / 2f)
+                val centerY = it.positionInRoot().y + (it.size.width / 2f)
+                onInitDeleteViewCenter(Offset(centerX, centerY))
+            }
+    ) {
+        Image(
+            painter = if (containElement) {
+                painterResource(id = R.drawable.ic_delete_sky_blue)
+            } else {
+                painterResource(id = R.drawable.ic_delete_white)
+            },
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        )
+    }
+}
+
+internal fun calculateDistance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
     return sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
 }
 
 @Composable
 internal fun ElementView(
     centerOffset: Offset,
+    centerDeleteViewOffset: Offset,
     statusBarHeight: Int,
     element: Element,
     modifier: Modifier = Modifier,
@@ -525,11 +600,24 @@ internal fun ElementView(
     onNavigateToInputText: () -> Unit,
     onCenterPortraitShow: (Boolean) -> Unit,
     onCenterLandscapeShow: (Boolean) -> Unit,
-    onDrag: (Boolean) -> Unit
+    onDrag: (Boolean) -> Unit,
+    onDeleteContained: (Boolean) -> Unit
 ) {
+    val length = dpToPx(dp = 28.dp)
     var elementCenterOffset by remember {
         mutableStateOf(Offset.Zero)
     }
+    val isNotDeleteContained by remember(elementCenterOffset) {
+        derivedStateOf {
+            calculateDistance(
+                x1 = elementCenterOffset.x,
+                y1 = elementCenterOffset.y,
+                x2 = centerDeleteViewOffset.x,
+                y2 = centerDeleteViewOffset.y
+            ) > length
+        }
+    }
+    var prevScale by remember { mutableFloatStateOf(1f) }
     var scale by remember { mutableFloatStateOf(element._scale) }
     var rotation by remember { mutableFloatStateOf(element._rotation) }
     var offset by remember { mutableStateOf(element._offset) }
@@ -542,7 +630,12 @@ internal fun ElementView(
                 offset = offsetChange
             )
         )
-        scale *= zoomChange
+        prevScale *= zoomChange
+        scale = if (isNotDeleteContained) {
+            prevScale * zoomChange
+        } else {
+            0.5f
+        }
         rotation += rotationChange
         offset += (offsetChange * scale).rotate(rotation)
         elementCenterOffset += (offsetChange * scale).rotate(rotation)
@@ -552,14 +645,22 @@ internal fun ElementView(
         onDrag(state.isTransformInProgress)
     }
 
+    LaunchedEffect(isNotDeleteContained) {
+        onDeleteContained(!isNotDeleteContained)
+    }
+
     onCenterPortraitShow(
-        elementCenterOffset.x >= centerOffset.x.roundToInt() - 5 &&
-                elementCenterOffset.x <= centerOffset.x.roundToInt() + 5
+        elementCenterOffset.x >= centerOffset.x.roundToInt() - 10 &&
+                elementCenterOffset.x <= centerOffset.x.roundToInt() + 10
     )
     onCenterLandscapeShow(
-        elementCenterOffset.y >= centerOffset.y.roundToInt() - 5 &&
-                elementCenterOffset.y <= centerOffset.y.roundToInt() + 5
+        elementCenterOffset.y >= centerOffset.y.roundToInt() - 10 &&
+                elementCenterOffset.y <= centerOffset.y.roundToInt() + 10
     )
+
+    if (elementCenterOffset != Offset.Zero && !isNotDeleteContained && !state.isTransformInProgress) {
+        onAction(CameraAction.DeleteElement(element._id))
+    }
 
     Box(
         modifier = modifier
