@@ -22,6 +22,9 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -500,7 +503,7 @@ internal fun AfterTakePhotoLayout(
             Box(
                 modifier = Modifier
                     .offset { IntOffset(centerOffset.x.roundToInt(), 0) }
-                    .width(3.dp)
+                    .width(2.dp)
                     .fillMaxHeight()
                     .background(color = colorResource(id = R.color.sky_blue))
             )
@@ -512,7 +515,7 @@ internal fun AfterTakePhotoLayout(
                 modifier = Modifier
                     .offset { IntOffset(0, centerOffset.y.roundToInt()) }
                     .fillMaxWidth()
-                    .height(3.dp)
+                    .height(2.dp)
                     .background(color = colorResource(id = R.color.sky_blue))
             )
         }
@@ -533,18 +536,7 @@ internal fun AfterTakePhotoLayout(
                     }
                 )
                 .align(Alignment.BottomCenter)
-                .padding(18.dp)
-                .clip(CircleShape)
-                .border(
-                    width = 3.dp,
-                    color = if (deleteViewContainElement) {
-                        colorResource(id = R.color.sky_blue)
-                    } else {
-                        colorResource(id = R.color.white)
-                    },
-                    shape = CircleShape
-                )
-                .size(56.dp),
+                .padding(14.dp),
             onInitDeleteViewCenter = {
                 centerDeleteViewOffset = it
             }
@@ -563,25 +555,56 @@ internal fun DeleteView(
     modifier: Modifier = Modifier,
     onInitDeleteViewCenter: (Offset) -> Unit
 ) {
-    Box(
+    val size by animateDpAsState(
+        targetValue = if (containElement) {
+            56.dp
+        } else {
+            42.dp
+        },
+        tween(durationMillis = 100, easing = LinearEasing),
+        label = ""
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .onGloballyPositioned {
-                val centerX = it.positionInRoot().x + (it.size.width / 2f)
-                val centerY = it.positionInRoot().y + (it.size.width / 2f)
-                onInitDeleteViewCenter(Offset(centerX, centerY))
-            }
     ) {
-        Image(
-            painter = if (containElement) {
-                painterResource(id = R.drawable.ic_delete_sky_blue)
-            } else {
-                painterResource(id = R.drawable.ic_delete_white)
-            },
-            contentDescription = null,
+        Text(
+            text = "삭제하려면 끌어다 놓으세요",
+            color = colorResource(id = R.color.white),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
+                .padding(bottom = 10.dp)
         )
+
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .border(
+                    width = 3.dp,
+                    color = colorResource(id = R.color.white),
+                    shape = CircleShape
+                )
+                .size(size)
+                .onGloballyPositioned {
+                    val centerX = it.positionInRoot().x + (it.size.width / 2f)
+                    val centerY = it.positionInRoot().y + (it.size.width / 2f)
+                    onInitDeleteViewCenter(Offset(centerX, centerY))
+                }
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_delete_white),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        if (containElement) {
+                            12.dp
+                        } else {
+                            8.dp
+                        }
+                    )
+            )
+        }
     }
 }
 
@@ -614,7 +637,7 @@ internal fun ElementView(
                 y1 = elementCenterOffset.y,
                 x2 = centerDeleteViewOffset.x,
                 y2 = centerDeleteViewOffset.y
-            ) > length
+            ) >= length
         }
     }
     var prevScale by remember { mutableFloatStateOf(element._prevScale) }
@@ -626,7 +649,7 @@ internal fun ElementView(
         scale = if (isNotDeleteContained) {
             prevScale * zoomChange
         } else {
-            0.3f
+            0.5f
         }
         rotation += rotationChange
         offset += (offsetChange * scale).rotate(rotation)
