@@ -141,9 +141,11 @@ internal class CameraViewModel : ViewModel() {
 
                 val element = _uiState.value.elements[index]
                 element.run {
+                    _prevScale *= action.scale
                     _scale *= action.scale
                     _rotation += action.rotation
-                    _offset += (action.offset * action.scale).rotate(action.rotation)
+                    _centerOffset = action.centerOffset
+                    _offset = action.offset
                 }
                 val updateElements = _uiState.value.elements.toMutableList().apply {
                     set(index, element)

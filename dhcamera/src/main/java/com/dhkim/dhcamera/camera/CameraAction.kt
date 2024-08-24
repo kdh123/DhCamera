@@ -24,6 +24,7 @@ sealed interface CameraAction {
         val id: String,
         val scale: Float,
         val rotation: Float,
+        val centerOffset: Offset,
         val offset: Offset
     ) : CameraAction
 }
