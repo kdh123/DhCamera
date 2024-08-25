@@ -15,15 +15,14 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.dhkim.dhcamera.camera.CameraScreen
 import com.dhkim.dhcamera.camera.CameraViewModel
-import com.dhkim.dhcamera.camera.InputTextScreen
 import com.dhkim.dhcamera.camera.Permission
 import com.dhkim.dhcamera.camera.SavedUrl
+import com.dhkim.dhcamera.camera.inputText.InputTextScreen
 import com.dhkim.dhcamera.camera.model.FontAlign
 import kotlinx.serialization.Serializable
 
 const val CAMERA_MAIN_ROUTE = "camera_main"
 const val CAMERA_ROUTE = "camera"
-const val INPUT_TEXT_ROUTE = "input_text"
 
 @Composable
 inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
@@ -47,7 +46,7 @@ fun NavGraphBuilder.cameraMainNavigation(
     ) {
         composable(CAMERA_ROUTE) {
             val viewModel = it.sharedViewModel<CameraViewModel>(navController = navController)
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val uiState by viewModel.cameraUiState.collectAsStateWithLifecycle()
             val sideEffect = remember {
                 viewModel.sideEffect
             }
@@ -55,7 +54,7 @@ fun NavGraphBuilder.cameraMainNavigation(
             CameraScreen(
                 uiState = uiState,
                 sideEffect = sideEffect,
-                onAction = viewModel::onAction,
+                onAction = viewModel::onCameraAction,
                 onNext = onNext,
                 onPermissionDenied = onPermissionDenied,
                 onNavigateToInputText = navController::navigateToInputText,
@@ -71,7 +70,7 @@ fun NavGraphBuilder.cameraMainNavigation(
             InputTextScreen(
                 currentFontProperties = currentFontProperties,
                 uiState = uiState,
-                onAction = viewModel::onAction,
+                onAction = viewModel::onInputTextAction,
                 onBack = navController::navigateUp
             )
         }

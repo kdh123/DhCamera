@@ -1,4 +1,4 @@
-package com.dhkim.dhcamera.camera
+package com.dhkim.dhcamera.camera.inputText
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dhkim.dhcamera.R
+import com.dhkim.dhcamera.camera.CameraAction
 import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.FontElement
 import com.dhkim.dhcamera.camera.model.SelectColorElement
@@ -77,7 +78,7 @@ import kotlin.math.roundToInt
 internal fun InputTextScreen(
     currentFontProperties: InputTextRoute?,
     uiState: InputTextUiState,
-    onAction: (CameraAction) -> Unit,
+    onAction: (InputTextAction) -> Unit,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -95,9 +96,9 @@ internal fun InputTextScreen(
 
     LaunchedEffect(Unit) {
         if (currentFontProperties != null && currentFontProperties.id.isNotEmpty()) {
-            onAction(CameraAction.InitTextElement(currentFontProperties))
+            onAction(InputTextAction.InitTextElement(currentFontProperties))
         } else {
-            onAction(CameraAction.ClearText)
+            onAction(InputTextAction.ClearText)
         }
         focusRequester.requestFocus()
     }
@@ -124,9 +125,13 @@ internal fun InputTextScreen(
                         .align(Alignment.CenterEnd)
                         .noRippleClick {
                             if (currentFontProperties?.id.isNullOrEmpty()) {
-                                onAction(CameraAction.AddText)
+                                onAction(InputTextAction.AddText)
                             } else {
-                                onAction(CameraAction.EditText(id = currentFontProperties?.id ?: ""))
+                                onAction(
+                                    InputTextAction.EditText(
+                                        id = currentFontProperties?.id ?: ""
+                                    )
+                                )
                             }
                             onBack()
                         }
@@ -142,7 +147,7 @@ internal fun InputTextScreen(
                 BasicTextField(
                     value = uiState.text,
                     onValueChange = {
-                        onAction(CameraAction.Typing(text = it))
+                        onAction(InputTextAction.Typing(text = it))
                     },
                     textStyle = LocalTextStyle.current.copy(
                         color = colorResource(id = color),
@@ -174,13 +179,13 @@ internal fun InputTextScreen(
                 colors = uiState.colors,
                 alignments = uiState.alignments,
                 onFontChanged = {
-                    onAction(CameraAction.ChangeFont(it))
+                    onAction(InputTextAction.ChangeFont(it))
                 },
                 onColorChanged = {
-                    onAction(CameraAction.ChangeFontColor(it))
+                    onAction(InputTextAction.ChangeFontColor(it))
                 },
                 onFontAlignChanged = {
-                    onAction(CameraAction.ChangeFontAlign)
+                    onAction(InputTextAction.ChangeFontAlign)
                 }
             )
         }

@@ -1,7 +1,8 @@
-package com.dhkim.dhcamera.camera
+package com.dhkim.dhcamera.camera.inputText
 
 import androidx.compose.runtime.Stable
 import com.dhkim.dhcamera.R
+import com.dhkim.dhcamera.camera.DhCamera
 import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.SelectColorElement
 import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
