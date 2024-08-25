@@ -221,7 +221,8 @@ private fun InputTextScreenPreview() {
         R.color.red,
         R.color.orange,
         R.color.sky_blue,
-        R.color.yellow
+        R.color.yellow,
+        R.color.pink
     ).mapIndexed { index, color ->
         SelectColorElement(
             isSelected = index == 0,

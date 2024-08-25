@@ -143,8 +143,8 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-typealias SavedUrl = String
-typealias Permission = String
+internal typealias SavedUrl = String
+internal typealias Permission = String
 
 @SuppressLint("MissingPermission", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -200,7 +200,7 @@ internal fun CameraScreen(
                 )
             )
         } else {
-            Toast.makeText(context, "Please allow media permission", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.allow_storage_permission), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -608,7 +608,7 @@ internal fun AfterTakePhotoLayout(
 }
 
 @Composable
-fun dpToPx(dp: Dp): Float {
+internal fun dpToPx(dp: Dp): Float {
     return with(LocalDensity.current) { dp.toPx() }
 }
 
@@ -831,7 +831,7 @@ internal fun ElementView(
     }
 }
 
-fun Offset.rotate(rotation: Float): Offset {
+internal fun Offset.rotate(rotation: Float): Offset {
     val angleInRadians = rotation * PI / 180
     return Offset(
         (x * cos(angleInRadians) - y * sin(angleInRadians)).toFloat(),

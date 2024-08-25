@@ -33,7 +33,8 @@ data class InputTextUiState(
         R.color.red,
         R.color.orange,
         R.color.sky_blue,
-        R.color.yellow
+        R.color.yellow,
+        R.color.pink
     ).mapIndexed { index, fontColor ->
         SelectColorElement(
             isSelected = index == 0,

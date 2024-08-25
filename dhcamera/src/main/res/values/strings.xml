@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">DhCamera</string>
     <string name="complete">완료</string>
+    <string name="allow_storage_permission">저장소 권한을 허용해주세요</string>
     <string name="drag_delete">삭제하려면 끌어다 놓으세요</string>
 </resources>
