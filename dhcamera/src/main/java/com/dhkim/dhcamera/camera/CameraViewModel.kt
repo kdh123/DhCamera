@@ -345,7 +345,8 @@ internal class CameraViewModel : ViewModel() {
     }
 
     private fun onResetPhoto() {
-        _cameraUiState.value = _cameraUiState.value.copy(bitmap = null, backgroundBitmap = null)
+        _cameraUiState.value = _cameraUiState.value.copy(bitmap = null, backgroundBitmap = null, elements = listOf())
+        _inputTextUiState.value = InputTextUiState()
     }
 
     private fun onTakePhoto(bitmap: Bitmap, backgroundBitmap: ImageBitmap) {

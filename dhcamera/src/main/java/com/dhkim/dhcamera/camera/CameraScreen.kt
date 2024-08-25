@@ -25,6 +25,7 @@ import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -90,6 +91,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -294,7 +296,10 @@ internal fun CameraScreen(
                                     CameraSelector.DEFAULT_BACK_CAMERA
                                 }
                         },
-                        onBack = onBack
+                        onBack = {
+                            onBack()
+                            onAction(CameraAction.ResetPhoto)
+                        }
                     )
                 }
             }
@@ -628,7 +633,7 @@ internal fun DeleteView(
         modifier = modifier
     ) {
         Text(
-            text = "삭제하려면 끌어다 놓으세요",
+            text = stringResource(id = R.string.drag_delete),
             color = colorResource(id = R.color.white),
             modifier = Modifier
                 .padding(bottom = 10.dp)
@@ -701,6 +706,11 @@ internal fun ElementView(
 
     var prevScale by remember(element._prevScale) { mutableFloatStateOf(element._prevScale) }
     var scale by remember(element._scale) { mutableFloatStateOf(element._scale) }
+    val animScale by animateFloatAsState(
+        targetValue = scale,
+        tween(durationMillis = 100, easing = LinearEasing),
+        label = ""
+    )
     var rotation by remember(element._rotation) { mutableFloatStateOf(element._rotation) }
     var offset by remember(element._offset) { mutableStateOf(element._offset) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
@@ -761,8 +771,8 @@ internal fun ElementView(
         modifier = modifier
             .padding(15.dp)
             .graphicsLayer(
-                scaleX = scale.coerceIn(0.5f..5f),
-                scaleY = scale.coerceIn(0.5f..5f),
+                scaleX = animScale.coerceIn(0.5f..5f),
+                scaleY = animScale.coerceIn(0.5f..5f),
                 rotationZ = rotation,
                 translationX = offset.x,
                 translationY = offset.y
@@ -784,7 +794,7 @@ internal fun ElementView(
                         contentScale = ContentScale.FillWidth
                     ),
                     modifier = Modifier
-                        .width(108.dp)
+                        .width(180.dp)
                 )
             }
 

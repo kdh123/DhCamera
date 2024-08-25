@@ -23,6 +23,5 @@ internal data class CameraUiState(
             )
         ) + DhCamera.getBackgroundItems()
     },
-    val elements: List<Element> = listOf(),
-    val currentText: String = ""
+    val elements: List<Element> = listOf()
 )
