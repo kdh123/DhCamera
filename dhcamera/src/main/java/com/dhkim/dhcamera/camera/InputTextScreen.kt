@@ -96,6 +96,8 @@ internal fun InputTextScreen(
     LaunchedEffect(Unit) {
         if (currentFontProperties != null && currentFontProperties.id.isNotEmpty()) {
             onAction(CameraAction.InitTextElement(currentFontProperties))
+        } else {
+            onAction(CameraAction.ClearText)
         }
         focusRequester.requestFocus()
     }
@@ -121,7 +123,11 @@ internal fun InputTextScreen(
                         .padding(10.dp)
                         .align(Alignment.CenterEnd)
                         .noRippleClick {
-                            onAction(CameraAction.AddText)
+                            if (currentFontProperties?.id.isNullOrEmpty()) {
+                                onAction(CameraAction.AddText)
+                            } else {
+                                onAction(CameraAction.EditText(id = currentFontProperties?.id ?: ""))
+                            }
                             onBack()
                         }
                 )

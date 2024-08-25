@@ -13,7 +13,6 @@ sealed class Element(
     var _centerOffset: Offset,
     var _offset: Offset
 ) {
-
     data class Text(
         val id: String = "${System.currentTimeMillis()}",
         val text: String,
@@ -21,20 +20,34 @@ sealed class Element(
         val font: Typeface? = null,
         val alignment: FontAlign = FontAlign.Center,
         @ColorRes val color: Int = R.color.black,
-        val prevScale: Float = 1f,
-        val scale: Float = 1f,
-        val rotation: Float = 0f,
-        val centerOffset: Offset = Offset.Zero,
-        val offset: Offset = Offset.Zero
-    ) : Element(id, prevScale, scale, rotation, centerOffset, offset)
+        var prevScale: Float = 1f,
+        var scale: Float = 1f,
+        var rotation: Float = 0f,
+        var centerOffset: Offset = Offset.Zero,
+        var offset: Offset = Offset.Zero
+    ) : Element(
+        _id = id,
+        _prevScale = prevScale,
+        _scale = scale,
+        _rotation = rotation,
+        _centerOffset = centerOffset,
+        _offset = offset
+    )
 
     data class Image(
         val id: String = "${System.currentTimeMillis()}",
         val imageUri: Any = "",
-        val prevScale: Float = 1f,
-        val scale: Float = 1f,
-        val rotation: Float = 0f,
-        val centerOffset: Offset = Offset.Zero,
-        val offset: Offset = Offset.Zero
-    ) : Element(id, prevScale, scale, rotation, centerOffset, offset)
+        var prevScale: Float = 1f,
+        var scale: Float = 1f,
+        var rotation: Float = 0f,
+        var centerOffset: Offset = Offset.Zero,
+        var offset: Offset = Offset.Zero
+    ) : Element(
+        _id = id,
+        _prevScale = prevScale,
+        _scale = scale,
+        _rotation = rotation,
+        _centerOffset = centerOffset,
+        _offset = offset
+    )
 }

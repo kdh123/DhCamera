@@ -18,12 +18,14 @@ sealed interface CameraAction {
     data class ChangeFontColor(val selectedIndex: Int) : CameraAction
     data object ChangeFontAlign : CameraAction
     data object AddText : CameraAction
+    data class EditText(val id: String) : CameraAction
     data class DeleteElement(val id: String) : CameraAction
     data object ClearText: CameraAction
     data class InitTextElement(val properties: InputTextRoute) : CameraAction
 
     data class ChangeElementProperties(
         val id: String,
+        val prevScale: Float,
         val scale: Float,
         val rotation: Float,
         val centerOffset: Offset,

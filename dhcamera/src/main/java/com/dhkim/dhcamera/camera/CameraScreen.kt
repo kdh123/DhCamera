@@ -464,7 +464,7 @@ internal fun AfterTakePhotoLayout(
                     .fillMaxSize()
             )
 
-            uiState.elements.forEach { element ->
+            uiState.elements.forEachIndexed { index, element ->
                 ElementView(
                     centerOffset = centerOffset,
                     centerDeleteViewOffset = centerDeleteViewOffset,
@@ -628,7 +628,7 @@ internal fun ElementView(
     onDeleteContained: (Boolean) -> Unit
 ) {
     val length = dpToPx(dp = 28.dp)
-    var elementCenterOffset by remember {
+    var elementCenterOffset by remember(element._centerOffset) {
         mutableStateOf(element._centerOffset)
     }
     val isNotDeleteContained by remember(elementCenterOffset) {
@@ -641,10 +641,11 @@ internal fun ElementView(
             ) >= length
         }
     }
-    var prevScale by remember { mutableFloatStateOf(element._prevScale) }
-    var scale by remember { mutableFloatStateOf(element._scale) }
-    var rotation by remember { mutableFloatStateOf(element._rotation) }
-    var offset by remember { mutableStateOf(element._offset) }
+
+    var prevScale by remember(element._prevScale) { mutableFloatStateOf(element._prevScale) }
+    var scale by remember(element._scale) { mutableFloatStateOf(element._scale) }
+    var rotation by remember(element._rotation) { mutableFloatStateOf(element._rotation) }
+    var offset by remember(element._offset) { mutableStateOf(element._offset) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
         prevScale *= zoomChange
         scale = if (isNotDeleteContained) {
@@ -670,11 +671,15 @@ internal fun ElementView(
             offset = Offset(offset.x, 0f)
         }
 
+        onCenterPortraitShow(isXCenter)
+        onCenterLandscapeShow(isYCenter)
+
         onAction(
             CameraAction.ChangeElementProperties(
                 id = element._id,
-                scale = zoomChange,
-                rotation = rotationChange,
+                prevScale = prevScale,
+                scale = scale,
+                rotation = rotation,
                 centerOffset = elementCenterOffset,
                 offset = offset
             )
@@ -689,17 +694,10 @@ internal fun ElementView(
         onDeleteContained(!isNotDeleteContained)
     }
 
-    onCenterPortraitShow(
-        elementCenterOffset.x >= centerOffset.x.roundToInt() - 50 &&
-                elementCenterOffset.x <= centerOffset.x.roundToInt() + 50
-    )
-    onCenterLandscapeShow(
-        elementCenterOffset.y >= centerOffset.y.roundToInt() - 50 &&
-                elementCenterOffset.y <= centerOffset.y.roundToInt() + 50
-    )
-
-    if (elementCenterOffset != Offset.Zero && !isNotDeleteContained && !state.isTransformInProgress) {
-        onAction(CameraAction.DeleteElement(element._id))
+    LaunchedEffect(state.isTransformInProgress) {
+        if (elementCenterOffset != Offset.Zero && !isNotDeleteContained && !state.isTransformInProgress) {
+            onAction(CameraAction.DeleteElement(element._id))
+        }
     }
 
     Box(
