@@ -240,41 +240,7 @@ internal fun CameraScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_back_black),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .clickable {
-                            if (isPhotoTaken) {
-                                onAction(CameraAction.ResetPhoto)
-                            } else {
-                                onBack()
-                            }
-                        }
-                )
-
-                Image(
-                    painter = painterResource(id = R.drawable.ic_filp_camera_black),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .align(Alignment.CenterEnd)
-                        .clickable {
-                            controller.cameraSelector =
-                                if (controller.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
-                                    CameraSelector.DEFAULT_FRONT_CAMERA
-                                } else {
-                                    CameraSelector.DEFAULT_BACK_CAMERA
-                                }
-                        }
-                )
-            }
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -309,14 +275,26 @@ internal fun CameraScreen(
                                 }
                             )
                         },
-                        onNavigateToInputText = onNavigateToInputText
+                        onNavigateToInputText = onNavigateToInputText,
+                        onBack = {
+                            onAction(CameraAction.ResetPhoto)
+                        }
                     )
                 } else {
                     BeforeTakePhotoLayout(
                         controller = controller,
                         graphicsLayer = graphicsLayer,
                         backgroundItems = backgroundItems.toImmutableList(),
-                        currentBackgroundImageIndex = uiState.currentBackgroundImageIndex
+                        currentBackgroundImageIndex = uiState.currentBackgroundImageIndex,
+                        onSelfieClick = {
+                            controller.cameraSelector =
+                                if (controller.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                                    CameraSelector.DEFAULT_FRONT_CAMERA
+                                } else {
+                                    CameraSelector.DEFAULT_BACK_CAMERA
+                                }
+                        },
+                        onBack = onBack
                     )
                 }
             }
@@ -356,80 +334,121 @@ internal fun BeforeTakePhotoLayout(
     controller: LifecycleCameraController,
     graphicsLayer: GraphicsLayer,
     backgroundItems: ImmutableList<BackgroundItem>,
-    currentBackgroundImageIndex: Int
+    currentBackgroundImageIndex: Int,
+    onSelfieClick: () -> Unit,
+    onBack: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .background(color = Color.Green)
-            .drawWithContent {
-                graphicsLayer.record {
-                    this@drawWithContent.drawContent()
-                }
-                drawLayer(graphicsLayer)
-            }
+            .fillMaxSize()
     ) {
-        CameraPreview(
-            controller = controller,
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-        )
-
-        if (backgroundItems.isNotEmpty()) {
-            val currentItem = backgroundItems[currentBackgroundImageIndex]
-            val modifier = if (currentItem.isFillMaxSize) {
-                Modifier
-                    .padding(
-                        start = currentItem.start.dp,
-                        end = currentItem.end.dp,
-                        top = currentItem.top.dp,
-                        bottom = currentItem.bottom.dp
-                    )
-                    .fillMaxSize()
-            } else {
-                Modifier
-                    .width(currentItem.width.dp)
-                    .height(currentItem.height.dp)
-            }
-
-            Box(
+                .background(color = Color.Green)
+                .drawWithContent {
+                    graphicsLayer.record {
+                        this@drawWithContent.drawContent()
+                    }
+                    drawLayer(graphicsLayer)
+                }
+        ) {
+            CameraPreview(
+                controller = controller,
                 modifier = Modifier
                     .fillMaxSize()
-            ) {
-                when (currentItem) {
-                    is BackgroundItem.BackgroundImageItem -> {
-                        GlideImage(
-                            imageOptions = ImageOptions(
-                                contentScale = ContentScale.FillWidth
-                            ),
-                            imageModel = {
-                                when {
-                                    currentItem.drawable != null -> {
-                                        currentItem.drawable
-                                    }
+            )
 
-                                    currentItem.imageUrl != null -> {
-                                        currentItem.imageUrl
-                                    }
-
-                                    else -> {}
-                                }
-                            },
-                            modifier = modifier
-                                .padding(
-                                    start = currentItem.start.dp,
-                                    end = currentItem.end.dp,
-                                    top = currentItem.top.dp,
-                                    bottom = currentItem.bottom.dp
-                                )
-                                .align(backgroundItems[currentBackgroundImageIndex].align.toAlignment())
+            if (backgroundItems.isNotEmpty()) {
+                val currentItem = backgroundItems[currentBackgroundImageIndex]
+                val modifier = if (currentItem.isFillMaxSize) {
+                    Modifier
+                        .padding(
+                            start = currentItem.start.dp,
+                            end = currentItem.end.dp,
+                            top = currentItem.top.dp,
+                            bottom = currentItem.bottom.dp
                         )
-                    }
+                        .fillMaxSize()
+                } else {
+                    Modifier
+                        .width(currentItem.width.dp)
+                        .height(currentItem.height.dp)
+                }
 
-                    is BackgroundItem.BackgroundTextItem -> {
-                        BackgroundTextLayout(item = currentItem)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    when (currentItem) {
+                        is BackgroundItem.BackgroundImageItem -> {
+                            GlideImage(
+                                imageOptions = ImageOptions(
+                                    contentScale = ContentScale.FillWidth
+                                ),
+                                imageModel = {
+                                    when {
+                                        currentItem.drawable != null -> {
+                                            currentItem.drawable
+                                        }
+
+                                        currentItem.imageUrl != null -> {
+                                            currentItem.imageUrl
+                                        }
+
+                                        else -> {}
+                                    }
+                                },
+                                modifier = modifier
+                                    .padding(
+                                        start = currentItem.start.dp,
+                                        end = currentItem.end.dp,
+                                        top = currentItem.top.dp,
+                                        bottom = currentItem.bottom.dp
+                                    )
+                                    .align(backgroundItems[currentBackgroundImageIndex].align.toAlignment())
+                            )
+                        }
+
+                        is BackgroundItem.BackgroundTextItem -> {
+                            BackgroundTextLayout(item = currentItem)
+                        }
                     }
                 }
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_back_white),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(48.dp)
+                    .background(color = colorResource(id = R.color.black_40))
+                    .padding(10.dp)
+                    .align(Alignment.CenterStart)
+                    .noRippleClick {
+                        onBack()
+                    }
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.ic_camera_flip_white),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(48.dp)
+                    .background(color = colorResource(id = R.color.black_40))
+                    .padding(10.dp)
+                    .align(Alignment.CenterEnd)
+                    .noRippleClick {
+                        onSelfieClick()
+                    }
+            )
         }
     }
 }
@@ -442,6 +461,7 @@ internal fun AfterTakePhotoLayout(
     onTextOptionClick: (InputTextRoute?) -> Unit,
     onImageOptionClick: () -> Unit,
     onNavigateToInputText: (InputTextRoute?) -> Unit,
+    onBack: () -> Unit
 ) {
     var isDragging by remember {
         mutableStateOf(false)
@@ -559,7 +579,8 @@ internal fun AfterTakePhotoLayout(
 
         PhotoOptions(
             onTextOptionClick = onTextOptionClick,
-            onImageOptionClick = onImageOptionClick
+            onImageOptionClick = onImageOptionClick,
+            onBack = onBack
         )
 
         DeleteView(
@@ -811,13 +832,29 @@ fun Offset.rotate(rotation: Float): Offset {
 @Composable
 internal fun PhotoOptions(
     onTextOptionClick: (InputTextRoute?) -> Unit,
-    onImageOptionClick: () -> Unit
+    onImageOptionClick: () -> Unit,
+    onBack: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_back_white),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .clip(CircleShape)
+                .size(48.dp)
+                .background(color = colorResource(id = R.color.black_40))
+                .padding(10.dp)
+                .align(Alignment.CenterStart)
+                .noRippleClick {
+                    onBack()
+                }
+        )
+
         Row(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
@@ -836,7 +873,7 @@ internal fun PhotoOptions(
                     }
             )
             Image(
-                painter = painterResource(id = R.drawable.ic_emoji_white),
+                painter = painterResource(id = R.drawable.ic_gallery_white),
                 contentDescription = null,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -857,7 +894,8 @@ internal fun PhotoOptions(
 private fun PhotoOptionsPreview() {
     PhotoOptions(
         onTextOptionClick = {},
-        onImageOptionClick = {}
+        onImageOptionClick = {},
+        onBack = {}
     )
 }
 
