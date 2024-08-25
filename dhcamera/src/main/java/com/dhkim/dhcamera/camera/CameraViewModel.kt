@@ -3,11 +3,13 @@ package com.dhkim.dhcamera.camera
 import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dhkim.dhcamera.R
 import com.dhkim.dhcamera.camera.inputText.InputTextAction
 import com.dhkim.dhcamera.camera.inputText.InputTextUiState
+import com.dhkim.dhcamera.camera.model.BackgroundItem
 import com.dhkim.dhcamera.camera.model.Element
 import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.SelectColorElement
@@ -74,7 +76,7 @@ internal class CameraViewModel : ViewModel() {
     internal fun onInputTextAction(action: InputTextAction) {
         when (action) {
             is InputTextAction.Typing -> {
-                _inputTextUiState.value = _inputTextUiState.value.copy(text = action.text)
+                _inputTextUiState.value = _inputTextUiState.value.copy(textFieldValue = action.text)
             }
 
             is InputTextAction.ChangeFont -> {
@@ -238,9 +240,15 @@ internal class CameraViewModel : ViewModel() {
                 )
             }.toImmutableList()
         with(properties) {
+            val currentText = _inputTextUiState.value.textFieldValue
+            val updateText = currentText.copy(
+                selection = TextRange(text.length + 1),
+                text = text
+            )
+
             _inputTextUiState.value = _inputTextUiState.value.copy(
                 id = id,
-                text = text,
+                textFieldValue = updateText,
                 fonts = updateFonts,
                 colors = updateColors,
                 alignments = updateAlignments
@@ -261,7 +269,7 @@ internal class CameraViewModel : ViewModel() {
 
     private fun addText() {
         with(_inputTextUiState.value) {
-            val text = text
+            val text = textFieldValue.text
             val font = fonts.firstOrNull { it.isSelected }?.font
             val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
             val alignment = alignments.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center
@@ -289,7 +297,7 @@ internal class CameraViewModel : ViewModel() {
             return
         }
         with(_inputTextUiState.value) {
-            val text = text
+            val text = textFieldValue.text
             val font = fonts.firstOrNull { it.isSelected }?.font
             val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
             val alignment = alignments.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center

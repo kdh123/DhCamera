@@ -114,6 +114,7 @@ import com.dhkim.dhcamera.camera.DhCamera.TEXT_START
 import com.dhkim.dhcamera.camera.DhCamera.TOP_CENTER
 import com.dhkim.dhcamera.camera.DhCamera.TOP_END
 import com.dhkim.dhcamera.camera.DhCamera.TOP_START
+import com.dhkim.dhcamera.camera.model.BackgroundItem
 import com.dhkim.dhcamera.camera.model.Element
 import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.navigation.InputTextRoute
@@ -692,11 +693,11 @@ internal fun ElementView(
         offset += (offsetChange * scale).rotate(rotation)
         elementCenterOffset += (offsetChange * scale).rotate(rotation)
 
-        val isXCenter = elementCenterOffset.x >= centerOffset.x.roundToInt() - 50 &&
-                elementCenterOffset.x <= centerOffset.x.roundToInt() + 50
+        val isXCenter = elementCenterOffset.x >= centerOffset.x.roundToInt() - 40 &&
+                elementCenterOffset.x <= centerOffset.x.roundToInt() + 40
 
-        val isYCenter = elementCenterOffset.y >= centerOffset.y.roundToInt() - 50 &&
-                elementCenterOffset.y <= centerOffset.y.roundToInt() + 50
+        val isYCenter = elementCenterOffset.y >= centerOffset.y.roundToInt() - 40 &&
+                elementCenterOffset.y <= centerOffset.y.roundToInt() + 40
 
         if (isXCenter) {
             offset = Offset(0f, offset.y)

@@ -1,5 +1,6 @@
 package com.dhkim.dhcamera.camera.inputText
 
+import androidx.compose.ui.text.input.TextFieldValue
 import com.dhkim.dhcamera.camera.navigation.InputTextRoute
 
 sealed interface InputTextAction {
@@ -9,7 +10,7 @@ sealed interface InputTextAction {
     data object ChangeFontAlign : InputTextAction
     data object AddText : InputTextAction
     data class EditText(val id: String) : InputTextAction
-    data class Typing(val text: String) : InputTextAction
+    data class Typing(val text: TextFieldValue) : InputTextAction
     data object ClearText : InputTextAction
     data class InitTextElement(val properties: InputTextRoute) : InputTextAction
 }

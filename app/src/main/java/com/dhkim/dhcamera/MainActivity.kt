@@ -8,8 +8,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import com.dhkim.dhcamera.camera.BackgroundImage
-import com.dhkim.dhcamera.camera.BackgroundText
+import com.dhkim.dhcamera.camera.model.BackgroundImage
+import com.dhkim.dhcamera.camera.model.BackgroundText
 import com.dhkim.dhcamera.camera.DhCamera
 import com.dhkim.dhcamera.camera.model.FontElement
 import com.dhkim.dhcamera.ui.theme.DhCameraTheme

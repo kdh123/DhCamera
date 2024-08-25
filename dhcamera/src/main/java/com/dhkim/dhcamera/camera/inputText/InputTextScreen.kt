@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dhkim.dhcamera.R
-import com.dhkim.dhcamera.camera.CameraAction
 import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.FontElement
 import com.dhkim.dhcamera.camera.model.SelectColorElement
@@ -145,7 +144,7 @@ internal fun InputTextScreen(
                     .weight(1f)
             ) {
                 BasicTextField(
-                    value = uiState.text,
+                    value = uiState.textFieldValue,
                     onValueChange = {
                         onAction(InputTextAction.Typing(text = it))
                     },
@@ -163,7 +162,7 @@ internal fun InputTextScreen(
                     modifier = Modifier
                         .padding(20.dp)
                         .run {
-                            if (uiState.text.isNotEmpty()) {
+                            if (uiState.textFieldValue.text.isNotEmpty()) {
                                 width(IntrinsicSize.Min)
                             } else {
                                 width(3.dp)

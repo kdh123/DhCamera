@@ -1,4 +1,4 @@
-package com.dhkim.dhcamera.camera
+package com.dhkim.dhcamera.camera.model
 
 import android.content.Context
 import android.graphics.Typeface

@@ -3,6 +3,7 @@ package com.dhkim.dhcamera.camera
 import android.graphics.Bitmap
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.ImageBitmap
+import com.dhkim.dhcamera.camera.model.BackgroundItem
 import com.dhkim.dhcamera.camera.model.Element
 
 @Stable
