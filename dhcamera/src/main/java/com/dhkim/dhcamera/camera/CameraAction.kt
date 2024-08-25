@@ -19,6 +19,7 @@ sealed interface CameraAction {
     data object ChangeFontAlign : CameraAction
     data object AddText : CameraAction
     data class EditText(val id: String) : CameraAction
+    data class AddImage(val imageUri: String) : CameraAction
     data class DeleteElement(val id: String) : CameraAction
     data object ClearText: CameraAction
     data class InitTextElement(val properties: InputTextRoute) : CameraAction

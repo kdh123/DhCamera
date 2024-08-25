@@ -120,8 +120,24 @@ internal class CameraViewModel : ViewModel() {
                             _offset = offset
                         }
                     }
-                    is Element.Image -> {
 
+                    is Element.Image -> {
+                        element.apply {
+                            prevScale = action.prevScale
+                            _prevScale = prevScale
+
+                            scale = action.scale
+                            _scale = scale
+
+                            rotation = action.rotation
+                            _rotation = rotation
+
+                            centerOffset = action.centerOffset
+                            _centerOffset = centerOffset
+
+                            offset = action.offset
+                            _offset = offset
+                        }
                     }
                 }
 
@@ -182,7 +198,22 @@ internal class CameraViewModel : ViewModel() {
             is CameraAction.EditText -> {
                 editText(id = action.id)
             }
+
+            is CameraAction.AddImage -> {
+                addImage(imageUri = action.imageUri)
+            }
         }
+    }
+
+    private fun addImage(imageUri: String) {
+        val updateElements = _uiState.value.elements.toMutableList()
+            .apply {
+                val element = Element.Image(
+                    imageUri = imageUri
+                )
+                add(element)
+            }
+        _uiState.value = _uiState.value.copy(elements = updateElements)
     }
 
     private fun addText() {

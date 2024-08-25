@@ -15,6 +15,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -178,6 +179,27 @@ internal fun CameraScreen(
             }
         }
     }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let {
+            onAction(CameraAction.AddImage(imageUri = "$it"))
+        }
+    }
+    val imagePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { state ->
+        val isGranted = state.keys.count { state[it] == false } == 0
+        if (isGranted) {
+            imagePickerLauncher.launch(
+                PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
+        } else {
+            Toast.makeText(context, "Please allow media permission", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         requestPermissionLauncher.launch(
@@ -272,6 +294,19 @@ internal fun CameraScreen(
                         onTextOptionClick = onNavigateToInputText,
                         onImageOptionClick = {
                             showImageBottomSheet = true
+                            imagePermissionLauncher.launch(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    arrayOf(
+                                        Manifest.permission.READ_MEDIA_IMAGES,
+                                        Manifest.permission.READ_MEDIA_VIDEO,
+                                    )
+                                } else {
+                                    arrayOf(
+                                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    )
+                                }
+                            )
                         },
                         onNavigateToInputText = onNavigateToInputText
                     )
@@ -721,11 +756,13 @@ internal fun ElementView(
     ) {
         when (element) {
             is Element.Image -> {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_back_black),
-                    contentDescription = null,
+                GlideImage(
+                    imageModel = { element.imageUri },
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.FillWidth
+                    ),
                     modifier = Modifier
-                        .fillMaxSize()
+                        .width(108.dp)
                 )
             }
 
