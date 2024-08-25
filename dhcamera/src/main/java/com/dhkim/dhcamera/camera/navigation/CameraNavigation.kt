@@ -12,11 +12,14 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import androidx.navigation.toRoute
 import com.dhkim.dhcamera.camera.CameraScreen
 import com.dhkim.dhcamera.camera.CameraViewModel
 import com.dhkim.dhcamera.camera.InputTextScreen
 import com.dhkim.dhcamera.camera.Permission
 import com.dhkim.dhcamera.camera.SavedUrl
+import com.dhkim.dhcamera.camera.model.FontAlign
+import kotlinx.serialization.Serializable
 
 const val CAMERA_MAIN_ROUTE = "camera_main"
 const val CAMERA_ROUTE = "camera"
@@ -60,22 +63,36 @@ fun NavGraphBuilder.cameraMainNavigation(
             )
         }
 
-        composable(INPUT_TEXT_ROUTE) {
+        composable<InputTextRoute> {
+            val currentFontProperties = it.toRoute<InputTextRoute>()
             val viewModel = it.sharedViewModel<CameraViewModel>(navController = navController)
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val uiState by viewModel.inputTextUiState.collectAsStateWithLifecycle()
 
             InputTextScreen(
+                currentFontProperties = currentFontProperties,
                 uiState = uiState,
                 onAction = viewModel::onAction,
-                fonts = viewModel.fontElements,
-                colors = viewModel.colorElements,
-                alignments = viewModel.fontAlignElements,
                 onBack = navController::navigateUp
             )
         }
     }
 }
 
-fun NavController.navigateToInputText() {
-    navigate(INPUT_TEXT_ROUTE)
+fun NavController.navigateToInputText(
+    data: InputTextRoute?
+) {
+    if (data != null) {
+        navigate(data)
+    } else {
+        navigate(InputTextRoute())
+    }
 }
+
+@Serializable
+data class InputTextRoute(
+    val id: String = "",
+    val text: String = "",
+    val font: Int = 0,
+    val color: Int = 0,
+    val alignment: FontAlign = FontAlign.Center
+)

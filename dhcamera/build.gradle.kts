@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("maven-publish")
+    id("kotlinx-serialization")
 }
 
 afterEvaluate {
@@ -86,6 +87,8 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.35.1-alpha")
     implementation("com.github.skydoves:landscapist-glide:2.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+    implementation("androidx.navigation:navigation-compose:2.8.0-rc01")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     implementation("androidx.compose.material:material:1.7.0-beta06")
     implementation("androidx.core:core-ktx:1.13.1")

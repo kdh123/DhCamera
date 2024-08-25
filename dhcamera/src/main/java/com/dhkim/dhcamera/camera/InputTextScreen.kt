@@ -66,26 +66,24 @@ import com.dhkim.dhcamera.camera.model.FontElement
 import com.dhkim.dhcamera.camera.model.SelectColorElement
 import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
 import com.dhkim.dhcamera.camera.model.SelectFontElement
+import com.dhkim.dhcamera.camera.navigation.InputTextRoute
 import com.dhkim.dhcamera.camera.ui.noRippleClick
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 internal fun InputTextScreen(
-    uiState: CameraUiState,
+    currentFontProperties: InputTextRoute?,
+    uiState: InputTextUiState,
     onAction: (CameraAction) -> Unit,
-    fonts: ImmutableList<SelectFontElement>,
-    colors: ImmutableList<SelectColorElement>,
-    alignments: ImmutableList<SelectFontAlignElement>,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
-    val font = fonts.firstOrNull { it.isSelected }?.font?.font
-    val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
-    val alignment = alignments.firstOrNull { it.isSelected }?.alignment
+    val font = uiState.fonts.firstOrNull { it.isSelected }?.font?.font
+    val color = uiState.colors.firstOrNull { it.isSelected }?.color ?: R.color.white
+    val alignment = uiState.alignments.firstOrNull { it.isSelected }?.alignment
         .run {
             when (this) {
                 FontAlign.Center -> TextAlign.Center
@@ -96,7 +94,9 @@ internal fun InputTextScreen(
         }
 
     LaunchedEffect(Unit) {
-        onAction(CameraAction.ClearText)
+        if (currentFontProperties != null && currentFontProperties.id.isNotEmpty()) {
+            onAction(CameraAction.InitTextElement(currentFontProperties))
+        }
         focusRequester.requestFocus()
     }
 
@@ -134,7 +134,7 @@ internal fun InputTextScreen(
                     .weight(1f)
             ) {
                 BasicTextField(
-                    value = uiState.currentText,
+                    value = uiState.text,
                     onValueChange = {
                         onAction(CameraAction.Typing(text = it))
                     },
@@ -152,7 +152,7 @@ internal fun InputTextScreen(
                     modifier = Modifier
                         .padding(20.dp)
                         .run {
-                            if (uiState.currentText.isNotEmpty()) {
+                            if (uiState.text.isNotEmpty()) {
                                 width(IntrinsicSize.Min)
                             } else {
                                 width(3.dp)
@@ -164,9 +164,9 @@ internal fun InputTextScreen(
             }
 
             TextOptions(
-                fonts = fonts,
-                colors = colors,
-                alignments = alignments,
+                fonts = uiState.fonts,
+                colors = uiState.colors,
+                alignments = uiState.alignments,
                 onFontChanged = {
                     onAction(CameraAction.ChangeFont(it))
                 },
@@ -219,11 +219,12 @@ private fun InputTextScreenPreview() {
     }.toImmutableList()
 
     InputTextScreen(
-        uiState = CameraUiState(currentText = "Hello World!"),
+        currentFontProperties = null,
+        uiState = InputTextUiState(
+            fonts = fonts,
+            colors = colors
+        ),
         onAction = {},
-        fonts = fonts,
-        colors = colors,
-        alignments = persistentListOf(),
         onBack = {}
     )
 }
@@ -310,13 +311,24 @@ internal fun ColorsLayout(
     colors: ImmutableList<SelectColorElement>,
     onColorChanged: (Int) -> Unit
 ) {
+    val state = rememberLazyListState()
+    val selectedIndex = colors.indexOfFirst { it.isSelected }.apply {
+        if (this == -1) {
+            plus(1)
+        }
+    }
+    val selectedColor = colors[selectedIndex].color
+
+    LaunchedEffect(colors) {
+        state.scrollToItem(selectedIndex)
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp)
     ) {
-        val selectedColor = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
@@ -341,9 +353,11 @@ internal fun ColorsLayout(
                     .padding(12.dp)
             )
         }
+
         LazyRow(
             contentPadding = PaddingValues(horizontal = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
+            state = state
         ) {
             itemsIndexed(items = colors, key = { index, _ ->
                 index
@@ -397,6 +411,15 @@ internal fun FontsLayout(
     val dpValue = 10.dp
     val pxValue = with(LocalDensity.current) { dpValue.toPx() }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(fonts) {
+        val selectedIndex = fonts.indexOfFirst { it.isSelected }.apply {
+            if (this == -1) {
+                plus(1)
+            }
+        }
+        state.scrollToItem(selectedIndex)
+    }
 
     LazyRow(
         userScrollEnabled = currentOptionIndex == 0,

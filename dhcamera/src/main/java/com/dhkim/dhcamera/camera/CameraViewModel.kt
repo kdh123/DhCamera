@@ -1,9 +1,6 @@
 package com.dhkim.dhcamera.camera
 
 import android.graphics.Bitmap
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +10,6 @@ import com.dhkim.dhcamera.camera.model.FontAlign
 import com.dhkim.dhcamera.camera.model.SelectColorElement
 import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
 import com.dhkim.dhcamera.camera.model.SelectFontElement
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,42 +22,11 @@ internal class CameraViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(CameraUiState())
     internal val uiState = _uiState.asStateFlow()
 
+    private val _inputTextUiState = MutableStateFlow(InputTextUiState())
+    internal val inputTextUiState = _inputTextUiState.asStateFlow()
+
     private val _sideEffect = MutableSharedFlow<CameraSideEffect>()
     internal val sideEffect = _sideEffect.asSharedFlow()
-
-    internal var fontElements: ImmutableList<SelectFontElement> by mutableStateOf(
-        DhCamera.getFontElements().mapIndexed { index, fontElement ->
-            SelectFontElement(
-                isSelected = index == 0,
-                font = fontElement
-            )
-        }.toImmutableList()
-    )
-    internal var colorElements: ImmutableList<SelectColorElement> by mutableStateOf(
-        listOf(
-            R.color.white,
-            R.color.black,
-            R.color.blue,
-            R.color.purple_200,
-            R.color.teal_200,
-            R.color.teal_700,
-            R.color.purple_500,
-            R.color.red,
-            R.color.orange,
-            R.color.sky_blue,
-            R.color.yellow
-        ).mapIndexed { index, color ->
-            SelectColorElement(
-                isSelected = index == 0,
-                color = color
-            )
-        }.toImmutableList()
-    )
-    internal var fontAlignElements: ImmutableList<SelectFontAlignElement> by mutableStateOf(
-        FontAlign.entries.mapIndexed { index, fontAlign ->
-            SelectFontAlignElement(isSelected = index == 0, alignment = fontAlign)
-        }.toImmutableList()
-    )
 
     internal fun onAction(action: CameraAction) {
         when (action) {
@@ -86,51 +51,65 @@ internal class CameraViewModel : ViewModel() {
             }
 
             is CameraAction.Typing -> {
-                _uiState.value = _uiState.value.copy(currentText = action.text)
+                _inputTextUiState.value = _inputTextUiState.value.copy(text = action.text)
             }
 
             is CameraAction.ChangeFont -> {
-                fontElements = fontElements.mapIndexed { index, selectFontElement ->
-                    selectFontElement.copy(isSelected = index == action.selectedIndex)
-                }.toImmutableList()
+                val updateFonts =
+                    _inputTextUiState.value.fonts.mapIndexed { index, selectFontElement ->
+                        selectFontElement.copy(isSelected = index == action.selectedIndex)
+                    }.toImmutableList()
+                _inputTextUiState.value = _inputTextUiState.value.copy(fonts = updateFonts)
             }
 
             is CameraAction.ChangeFontColor -> {
-                colorElements = colorElements.mapIndexed { index, selectColorElement ->
-                    selectColorElement.copy(isSelected = index == action.selectedIndex)
-                }.toImmutableList()
+                val updateColors =
+                    _inputTextUiState.value.colors.mapIndexed { index, selectColorElement ->
+                        selectColorElement.copy(isSelected = index == action.selectedIndex)
+                    }.toImmutableList()
+                _inputTextUiState.value = _inputTextUiState.value.copy(colors = updateColors)
             }
 
             CameraAction.ChangeFontAlign -> {
-                val currentSelectedIndex = fontAlignElements.indexOfFirst { it.isSelected }.apply {
-                    if (this == -1) {
-                        plus(1)
+                val currentSelectedIndex =
+                    _inputTextUiState.value.alignments.indexOfFirst { it.isSelected }.apply {
+                        if (this == -1) {
+                            plus(1)
+                        }
                     }
-                }
-                fontAlignElements = fontAlignElements.mapIndexed { index, selectFontAlignElement ->
-                    selectFontAlignElement.copy(
-                        isSelected = index == (currentSelectedIndex + 1) % fontAlignElements.size
-                    )
-                }.toImmutableList()
+                val updateAlignments =
+                    _inputTextUiState.value.alignments.mapIndexed { index, selectFontAlignElement ->
+                        selectFontAlignElement.copy(
+                            isSelected = index == (currentSelectedIndex + 1) % _inputTextUiState.value.alignments.size
+                        )
+                    }.toImmutableList()
+
+                _inputTextUiState.value =
+                    _inputTextUiState.value.copy(alignments = updateAlignments)
             }
 
             CameraAction.AddText -> {
-                val text = _uiState.value.currentText
-                val font = fontElements.firstOrNull { it.isSelected }?.font?.font
-                val color = colorElements.firstOrNull { it.isSelected }?.color ?: R.color.white
-                val alignment = fontAlignElements.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center
+                with(_inputTextUiState.value) {
+                    val text = text
+                    val font = fonts.firstOrNull { it.isSelected }?.font
+                    val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
+                    val alignment =
+                        alignments.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center
 
-                val updateElements = _uiState.value.elements.toMutableList()
-                    .apply {
-                        val element = Element.Text(
-                            text = text,
-                            font = font,
-                            color = color,
-                            alignment = alignment
-                        )
-                        add(element)
-                    }
-                _uiState.value = _uiState.value.copy(elements = updateElements)
+                    val updateElements = _uiState.value.elements.toMutableList()
+                        .apply {
+                            val element = Element.Text(
+                                text = text,
+                                fontId = font?.fontId ?: 0,
+                                font = font?.font,
+                                color = color,
+                                alignment = alignment
+                            )
+                            add(element)
+                        }
+                    _uiState.value = _uiState.value.copy(elements = updateElements)
+                    _inputTextUiState.value = InputTextUiState()
+                }
             }
 
             is CameraAction.ChangeElementProperties -> {
@@ -151,15 +130,52 @@ internal class CameraViewModel : ViewModel() {
                     set(index, element)
                 }
                 _uiState.value = _uiState.value.copy(elements = updateElements)
+                _inputTextUiState.value = InputTextUiState()
             }
 
             CameraAction.ClearText -> {
-                _uiState.value = _uiState.value.copy(currentText = "")
+                _inputTextUiState.value = InputTextUiState()
             }
 
             is CameraAction.DeleteElement -> {
                 val updateElements = _uiState.value.elements.filter { it._id != action.id }
                 _uiState.value = _uiState.value.copy(elements = updateElements)
+            }
+
+            is CameraAction.InitTextElement -> {
+                var isFontSelected = false
+                val updateFonts = _inputTextUiState.value.fonts.mapIndexed { index, element ->
+                    SelectFontElement(
+                        isSelected = if (!isFontSelected && element.font.fontId == action.properties.font) {
+                            isFontSelected = true
+                            true
+                        } else {
+                            false
+                        },
+                        font = _inputTextUiState.value.fonts[index].font
+                    )
+                }.toImmutableList()
+                val updateColors = _inputTextUiState.value.colors.mapIndexed { index, element ->
+                    SelectColorElement(
+                        isSelected = element.color == action.properties.color,
+                        color = _inputTextUiState.value.colors[index].color
+                    )
+                }.toImmutableList()
+                val updateAlignments = _inputTextUiState.value.alignments.mapIndexed { index, element ->
+                    SelectFontAlignElement(
+                        isSelected = element.alignment == action.properties.alignment,
+                        alignment = _inputTextUiState.value.alignments[index].alignment
+                    )
+                }.toImmutableList()
+                with(action.properties) {
+                    _inputTextUiState.value = _inputTextUiState.value.copy(
+                        id = id,
+                        text = text,
+                        fonts = updateFonts,
+                        colors = updateColors,
+                        alignments = updateAlignments
+                    )
+                }
             }
         }
     }

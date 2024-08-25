@@ -17,6 +17,7 @@ sealed class Element(
     data class Text(
         val id: String = "${System.currentTimeMillis()}",
         val text: String,
+        val fontId: Int = 0,
         val font: Typeface? = null,
         val alignment: FontAlign = FontAlign.Center,
         @ColorRes val color: Int = R.color.black,

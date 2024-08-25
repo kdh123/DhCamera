@@ -115,6 +115,7 @@ import com.dhkim.dhcamera.camera.DhCamera.TOP_END
 import com.dhkim.dhcamera.camera.DhCamera.TOP_START
 import com.dhkim.dhcamera.camera.model.Element
 import com.dhkim.dhcamera.camera.model.FontAlign
+import com.dhkim.dhcamera.camera.navigation.InputTextRoute
 import com.dhkim.dhcamera.camera.ui.noRippleClick
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -149,7 +150,7 @@ internal fun CameraScreen(
     onAction: (CameraAction) -> Unit,
     onNext: (SavedUrl) -> Unit,
     onPermissionDenied: (Permission) -> Unit,
-    onNavigateToInputText: () -> Unit,
+    onNavigateToInputText: (InputTextRoute?) -> Unit,
     onBack: () -> Unit
 ) {
     var showImageBottomSheet by remember {
@@ -402,9 +403,9 @@ internal fun AfterTakePhotoLayout(
     uiState: CameraUiState,
     onAction: (CameraAction) -> Unit,
     resultGraphicsLayer: GraphicsLayer,
-    onTextOptionClick: () -> Unit,
+    onTextOptionClick: (InputTextRoute?) -> Unit,
     onImageOptionClick: () -> Unit,
-    onNavigateToInputText: () -> Unit,
+    onNavigateToInputText: (InputTextRoute?) -> Unit,
 ) {
     var isDragging by remember {
         mutableStateOf(false)
@@ -620,7 +621,7 @@ internal fun ElementView(
     element: Element,
     modifier: Modifier = Modifier,
     onAction: (CameraAction) -> Unit,
-    onNavigateToInputText: () -> Unit,
+    onNavigateToInputText: (InputTextRoute) -> Unit,
     onCenterPortraitShow: (Boolean) -> Unit,
     onCenterLandscapeShow: (Boolean) -> Unit,
     onDrag: (Boolean) -> Unit,
@@ -747,7 +748,15 @@ internal fun ElementView(
                     },
                     modifier = Modifier
                         .noRippleClick {
-                            onNavigateToInputText()
+                            onNavigateToInputText(
+                                InputTextRoute(
+                                    id = element.id,
+                                    text = element.text,
+                                    font = element.fontId,
+                                    color = element.color,
+                                    alignment = element.alignment
+                                )
+                            )
                         }
                 )
             }
@@ -765,7 +774,7 @@ fun Offset.rotate(rotation: Float): Offset {
 
 @Composable
 internal fun PhotoOptions(
-    onTextOptionClick: () -> Unit,
+    onTextOptionClick: (InputTextRoute?) -> Unit,
     onImageOptionClick: () -> Unit
 ) {
     Box(
@@ -787,7 +796,7 @@ internal fun PhotoOptions(
                     .background(color = colorResource(id = R.color.black_40))
                     .padding(10.dp)
                     .noRippleClick {
-                        onTextOptionClick()
+                        onTextOptionClick(null)
                     }
             )
             Image(
