@@ -1,6 +1,6 @@
 package com.dhkim.dhcamera.inputText
 
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dhkim.dhcamera.R
@@ -24,12 +24,8 @@ class InputTextViewModel : ViewModel() {
     private val _sideEffect = MutableSharedFlow<InputTextSideEffect>()
     internal val sideEffect = _sideEffect.asSharedFlow()
 
-    internal fun onInputTextAction(action: InputTextAction) {
+    internal fun onAction(action: InputTextAction) {
         when (action) {
-            is InputTextAction.Typing -> {
-                _uiState.value = _uiState.value.copy(textFieldValue = action.text)
-            }
-
             is InputTextAction.ChangeFont -> {
                 changeFont(selectedIndex = action.selectedIndex)
             }
@@ -42,12 +38,12 @@ class InputTextViewModel : ViewModel() {
                 changeFontAlign()
             }
 
-            InputTextAction.AddText -> {
-                addText()
+            is InputTextAction.AddText -> {
+                addText(text = action.text)
             }
 
             is InputTextAction.EditText -> {
-                editText(id = action.id)
+                editText(id = action.id, text = action.text)
             }
 
             InputTextAction.ClearText -> {
@@ -122,15 +118,8 @@ class InputTextViewModel : ViewModel() {
                 )
             }.toImmutableList()
         with(properties) {
-            val currentText = _uiState.value.textFieldValue
-            val updateText = currentText.copy(
-                selection = TextRange(text.length + 1),
-                text = text
-            )
-
             _uiState.value = _uiState.value.copy(
                 id = id,
-                textFieldValue = updateText,
                 fonts = updateFonts,
                 colors = updateColors,
                 alignments = updateAlignments
@@ -138,17 +127,16 @@ class InputTextViewModel : ViewModel() {
         }
     }
 
-    private fun addText() {
+    private fun addText(text: TextFieldValue) {
         viewModelScope.launch {
             with(_uiState.value) {
-                val text = textFieldValue.text
                 val font = fonts.firstOrNull { it.isSelected }?.font
                 val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
                 val alignment = alignments.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center
 
                 val element = InputTextRoute(
                     id = "${System.currentTimeMillis()}",
-                    text = text,
+                    text = text.text,
                     font = font?.fontId ?: 0,
                     color = color,
                     alignment = alignment
@@ -160,17 +148,16 @@ class InputTextViewModel : ViewModel() {
         }
     }
 
-    private fun editText(id: String) {
+    private fun editText(id: String, text: TextFieldValue) {
         viewModelScope.launch {
             with(_uiState.value) {
-                val text = textFieldValue.text
                 val font = fonts.firstOrNull { it.isSelected }?.font
                 val color = colors.firstOrNull { it.isSelected }?.color ?: R.color.white
                 val alignment = alignments.firstOrNull { it.isSelected }?.alignment ?: FontAlign.Center
 
                 val element = InputTextRoute(
                     id = id,
-                    text = text,
+                    text = text.text,
                     font = font?.fontId ?: 0,
                     color = color,
                     alignment = alignment

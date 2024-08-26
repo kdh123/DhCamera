@@ -53,9 +53,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
@@ -98,9 +100,16 @@ internal fun InputTextScreen(
                 null -> TextAlign.Center
             }
         }
+    var currentText by remember {
+        mutableStateOf(TextFieldValue(""))
+    }
 
     LaunchedEffect(Unit) {
         if (currentFontProperties != null && currentFontProperties.id.isNotEmpty()) {
+            currentText = TextFieldValue(
+                selection = TextRange(currentFontProperties.text.length + 1),
+                text = currentFontProperties.text
+            )
             onAction(InputTextAction.InitTextElement(currentFontProperties))
         } else {
             onAction(InputTextAction.ClearText)
@@ -141,9 +150,14 @@ internal fun InputTextScreen(
                         .align(Alignment.CenterEnd)
                         .noRippleClick {
                             if (currentFontProperties?.id.isNullOrEmpty()) {
-                                onAction(InputTextAction.AddText)
+                                onAction(InputTextAction.AddText(text = currentText))
                             } else {
-                                onAction(InputTextAction.EditText(id = currentFontProperties?.id ?: ""))
+                                onAction(
+                                    InputTextAction.EditText(
+                                        id = currentFontProperties?.id ?: "",
+                                        text = currentText
+                                    )
+                                )
                             }
                         }
                 )
@@ -156,9 +170,9 @@ internal fun InputTextScreen(
                     .weight(1f)
             ) {
                 BasicTextField(
-                    value = uiState.textFieldValue,
+                    value = currentText,
                     onValueChange = {
-                        onAction(InputTextAction.Typing(text = it))
+                        currentText = it
                     },
                     textStyle = LocalTextStyle.current.copy(
                         color = colorResource(id = color),
@@ -174,7 +188,7 @@ internal fun InputTextScreen(
                     modifier = Modifier
                         .padding(20.dp)
                         .run {
-                            if (uiState.textFieldValue.text.isNotEmpty()) {
+                            if (currentText.text.isNotEmpty()) {
                                 width(IntrinsicSize.Min)
                             } else {
                                 width(3.dp)

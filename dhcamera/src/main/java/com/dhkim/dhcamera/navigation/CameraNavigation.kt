@@ -66,7 +66,7 @@ fun NavGraphBuilder.inputTextNavigation(
             currentFontProperties = currentFontProperties,
             uiState = uiState,
             sideEffect = sideEffect,
-            onAction = viewModel::onInputTextAction,
+            onAction = viewModel::onAction,
             onCompleted = onCompleted,
             onBack = onBack
         )

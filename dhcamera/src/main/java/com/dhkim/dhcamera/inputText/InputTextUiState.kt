@@ -14,7 +14,6 @@ import kotlinx.collections.immutable.toImmutableList
 @Stable
 data class InputTextUiState(
     val id: String = "",
-    val textFieldValue: TextFieldValue = TextFieldValue(""),
     val fonts: ImmutableList<SelectFontElement> = DhCamera.getFontElements()
         .mapIndexed { index, fontElement ->
             SelectFontElement(
