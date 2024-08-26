@@ -1,7 +1,7 @@
-package com.dhkim.dhcamera.camera.inputText
+package com.dhkim.dhcamera.inputText
 
 import androidx.compose.ui.text.input.TextFieldValue
-import com.dhkim.dhcamera.camera.navigation.InputTextRoute
+import com.dhkim.dhcamera.navigation.InputTextRoute
 
 sealed interface InputTextAction {
 

@@ -2,8 +2,8 @@ package com.dhkim.dhcamera.camera
 
 import android.content.Context
 import android.content.Intent
-import com.dhkim.dhcamera.camera.model.BackgroundItem
-import com.dhkim.dhcamera.camera.model.FontElement
+import com.dhkim.dhcamera.model.BackgroundItem
+import com.dhkim.dhcamera.model.FontElement
 
 object DhCamera {
 

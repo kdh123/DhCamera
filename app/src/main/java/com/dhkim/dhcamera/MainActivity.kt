@@ -8,10 +8,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import com.dhkim.dhcamera.camera.model.BackgroundImage
-import com.dhkim.dhcamera.camera.model.BackgroundText
+import com.dhkim.dhcamera.model.BackgroundImage
+import com.dhkim.dhcamera.model.BackgroundText
 import com.dhkim.dhcamera.camera.DhCamera
-import com.dhkim.dhcamera.camera.model.FontElement
+import com.dhkim.dhcamera.model.FontElement
 import com.dhkim.dhcamera.ui.theme.DhCameraTheme
 
 class MainActivity : ComponentActivity() {
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
         val fonts = mutableListOf<FontElement>().apply {
             repeat(10) {
                 add(
-                    FontElement.Builder(this@MainActivity)
+                    FontElement.Builder()
                         .text("폰트 $it")
                         .font(if (it % 2 == 0) {
                             R.font.bm_font

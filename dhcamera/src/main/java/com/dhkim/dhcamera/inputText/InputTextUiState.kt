@@ -1,13 +1,13 @@
-package com.dhkim.dhcamera.camera.inputText
+package com.dhkim.dhcamera.inputText
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.dhkim.dhcamera.R
 import com.dhkim.dhcamera.camera.DhCamera
-import com.dhkim.dhcamera.camera.model.FontAlign
-import com.dhkim.dhcamera.camera.model.SelectColorElement
-import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
-import com.dhkim.dhcamera.camera.model.SelectFontElement
+import com.dhkim.dhcamera.model.FontAlign
+import com.dhkim.dhcamera.model.SelectColorElement
+import com.dhkim.dhcamera.model.SelectFontAlignElement
+import com.dhkim.dhcamera.model.SelectFontElement
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

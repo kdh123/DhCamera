@@ -1,6 +1,6 @@
 package com.dhkim.dhcamera
 
-import com.dhkim.dhcamera.camera.model.Element
+import com.dhkim.dhcamera.model.Element
 import org.junit.Test
 
 import org.junit.Assert.*

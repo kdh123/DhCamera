@@ -1,4 +1,4 @@
-package com.dhkim.dhcamera.camera.ui
+package com.dhkim.dhcamera.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource

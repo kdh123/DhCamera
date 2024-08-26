@@ -1,6 +1,5 @@
-package com.dhkim.dhcamera.camera.model
+package com.dhkim.dhcamera.model
 
-import android.graphics.Typeface
 import androidx.annotation.ColorRes
 import androidx.compose.ui.geometry.Offset
 import com.dhkim.dhcamera.R
@@ -17,7 +16,6 @@ sealed class Element(
         val id: String = "${System.currentTimeMillis()}",
         val text: String,
         val fontId: Int = 0,
-        val font: Typeface? = null,
         val alignment: FontAlign = FontAlign.Center,
         @ColorRes val color: Int = R.color.black,
         var prevScale: Float = 1f,

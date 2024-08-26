@@ -1,4 +1,4 @@
-package com.dhkim.dhcamera.camera.inputText
+package com.dhkim.dhcamera.inputText
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -62,15 +63,17 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dhkim.dhcamera.R
-import com.dhkim.dhcamera.camera.model.FontAlign
-import com.dhkim.dhcamera.camera.model.FontElement
-import com.dhkim.dhcamera.camera.model.SelectColorElement
-import com.dhkim.dhcamera.camera.model.SelectFontAlignElement
-import com.dhkim.dhcamera.camera.model.SelectFontElement
-import com.dhkim.dhcamera.camera.navigation.InputTextRoute
-import com.dhkim.dhcamera.camera.ui.noRippleClick
+import com.dhkim.dhcamera.model.FontAlign
+import com.dhkim.dhcamera.model.FontElement
+import com.dhkim.dhcamera.model.SelectColorElement
+import com.dhkim.dhcamera.model.SelectFontAlignElement
+import com.dhkim.dhcamera.model.SelectFontElement
+import com.dhkim.dhcamera.navigation.InputTextRoute
+import com.dhkim.dhcamera.ui.noRippleClick
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -78,11 +81,13 @@ import kotlin.math.roundToInt
 internal fun InputTextScreen(
     currentFontProperties: InputTextRoute?,
     uiState: InputTextUiState,
+    sideEffect: SharedFlow<InputTextSideEffect>,
     onAction: (InputTextAction) -> Unit,
+    onCompleted: (InputTextRoute) -> Unit,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
-    val font = uiState.fonts.firstOrNull { it.isSelected }?.font?.font
+    val fontId = uiState.fonts.firstOrNull { it.isSelected }?.font?.fontId ?: 0
     val color = uiState.colors.firstOrNull { it.isSelected }?.color ?: R.color.white
     val alignment = uiState.alignments.firstOrNull { it.isSelected }?.alignment
         .run {
@@ -101,6 +106,17 @@ internal fun InputTextScreen(
             onAction(InputTextAction.ClearText)
         }
         focusRequester.requestFocus()
+    }
+
+    LaunchedEffect(Unit) {
+        sideEffect.collect {
+            when (it) {
+                is InputTextSideEffect.OnCompleted -> {
+                    onCompleted(it.inputText)
+                    onBack()
+                }
+            }
+        }
     }
 
     Box(modifier = Modifier.imePadding()) {
@@ -127,13 +143,8 @@ internal fun InputTextScreen(
                             if (currentFontProperties?.id.isNullOrEmpty()) {
                                 onAction(InputTextAction.AddText)
                             } else {
-                                onAction(
-                                    InputTextAction.EditText(
-                                        id = currentFontProperties?.id ?: ""
-                                    )
-                                )
+                                onAction(InputTextAction.EditText(id = currentFontProperties?.id ?: ""))
                             }
-                            onBack()
                         }
                 )
             }
@@ -152,10 +163,10 @@ internal fun InputTextScreen(
                     textStyle = LocalTextStyle.current.copy(
                         color = colorResource(id = color),
                         fontSize = TextUnit(24f, TextUnitType.Sp),
-                        fontFamily = if (font == null) {
+                        fontFamily = if (fontId == 0) {
                             null
                         } else {
-                            FontFamily(font)
+                            FontFamily(Font(fontId))
                         },
                         textAlign = alignment
                     ),
@@ -236,7 +247,9 @@ private fun InputTextScreenPreview() {
             fonts = fonts,
             colors = colors
         ),
+        sideEffect = MutableSharedFlow(),
         onAction = {},
+        onCompleted = {},
         onBack = {}
     )
 }
@@ -486,10 +499,10 @@ internal fun FontsLayout(
                 } else {
                     colorResource(id = R.color.white)
                 },
-                fontFamily = if (fontElement.font.font == null) {
+                fontFamily = if (fontElement.font.fontId == 0) {
                     null
                 } else {
-                    FontFamily(fontElement.font.font!!)
+                    FontFamily(Font(fontElement.font.fontId))
                 },
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier

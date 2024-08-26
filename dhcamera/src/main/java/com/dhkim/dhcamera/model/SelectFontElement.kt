@@ -1,4 +1,4 @@
-package com.dhkim.dhcamera.camera.model
+package com.dhkim.dhcamera.model
 
 import androidx.compose.runtime.Stable
 

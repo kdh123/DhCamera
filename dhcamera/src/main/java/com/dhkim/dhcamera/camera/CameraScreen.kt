@@ -92,6 +92,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -116,11 +117,11 @@ import com.dhkim.dhcamera.camera.DhCamera.TEXT_START
 import com.dhkim.dhcamera.camera.DhCamera.TOP_CENTER
 import com.dhkim.dhcamera.camera.DhCamera.TOP_END
 import com.dhkim.dhcamera.camera.DhCamera.TOP_START
-import com.dhkim.dhcamera.camera.model.BackgroundItem
-import com.dhkim.dhcamera.camera.model.Element
-import com.dhkim.dhcamera.camera.model.FontAlign
-import com.dhkim.dhcamera.camera.navigation.InputTextRoute
-import com.dhkim.dhcamera.camera.ui.noRippleClick
+import com.dhkim.dhcamera.model.BackgroundItem
+import com.dhkim.dhcamera.model.Element
+import com.dhkim.dhcamera.model.FontAlign
+import com.dhkim.dhcamera.navigation.InputTextRoute
+import com.dhkim.dhcamera.ui.noRippleClick
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.collections.immutable.ImmutableList
@@ -149,13 +150,15 @@ internal typealias Permission = String
 @SuppressLint("MissingPermission", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 internal fun CameraScreen(
+    inputText: InputTextRoute?,
     uiState: CameraUiState,
     sideEffect: SharedFlow<CameraSideEffect>,
     onAction: (CameraAction) -> Unit,
     onNext: (SavedUrl) -> Unit,
     onPermissionDenied: (Permission) -> Unit,
     onNavigateToInputText: (InputTextRoute?) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onInitInputText: () -> Unit,
 ) {
     var showImageBottomSheet by remember {
         mutableStateOf(false)
@@ -204,6 +207,12 @@ internal fun CameraScreen(
         }
     }
 
+    LaunchedEffect(inputText) {
+        if (inputText != null) {
+            onAction(CameraAction.AddText(inputText))
+        }
+    }
+
     LaunchedEffect(Unit) {
         requestPermissionLauncher.launch(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -220,14 +229,6 @@ internal fun CameraScreen(
         )
     }
 
-    BackHandler {
-        if (isPhotoTaken) {
-            onAction(CameraAction.ResetPhoto)
-        } else {
-            (context as? Activity)?.finish()
-        }
-    }
-
     LaunchedEffect(Unit) {
         sideEffect.collectLatest {
             when (it) {
@@ -239,6 +240,14 @@ internal fun CameraScreen(
                     Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    BackHandler {
+        if (isPhotoTaken) {
+            onAction(CameraAction.ResetPhoto)
+        } else {
+            (context as? Activity)?.finish()
         }
     }
 
@@ -278,6 +287,7 @@ internal fun CameraScreen(
                             )
                         },
                         onNavigateToInputText = onNavigateToInputText,
+                        onInitInputText = onInitInputText,
                         onBack = {
                             onAction(CameraAction.ResetPhoto)
                         }
@@ -466,6 +476,7 @@ internal fun AfterTakePhotoLayout(
     onTextOptionClick: (InputTextRoute?) -> Unit,
     onImageOptionClick: () -> Unit,
     onNavigateToInputText: (InputTextRoute?) -> Unit,
+    onInitInputText: () -> Unit,
     onBack: () -> Unit
 ) {
     var isDragging by remember {
@@ -546,7 +557,8 @@ internal fun AfterTakePhotoLayout(
                     },
                     onDeleteContained = {
                         deleteViewContainElement = it
-                    }
+                    },
+                    onInitInputText = onInitInputText
                 )
             }
 
@@ -616,7 +628,7 @@ internal fun dpToPx(dp: Dp): Float {
 internal fun DeleteView(
     containElement: Boolean,
     modifier: Modifier = Modifier,
-    onInitDeleteViewCenter: (Offset) -> Unit
+    onInitDeleteViewCenter: (Offset) -> Unit,
 ) {
     val size by animateDpAsState(
         targetValue = if (containElement) {
@@ -671,8 +683,12 @@ internal fun DeleteView(
     }
 }
 
-internal fun calculateDistance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
-    return sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
+internal fun calculateDistance(offset1: Offset, offset2: Offset): Float {
+    return if (offset1.x == 0f && offset1.y == 0f) {
+        1000f
+    } else {
+        sqrt((offset2.x - offset1.x).pow(2) + (offset2.y - offset1.y).pow(2))
+    }
 }
 
 @Composable
@@ -687,38 +703,38 @@ internal fun ElementView(
     onCenterPortraitShow: (Boolean) -> Unit,
     onCenterLandscapeShow: (Boolean) -> Unit,
     onDrag: (Boolean) -> Unit,
-    onDeleteContained: (Boolean) -> Unit
+    onDeleteContained: (Boolean) -> Unit,
+    onInitInputText: () -> Unit
 ) {
     val length = dpToPx(dp = 28.dp)
     var elementCenterOffset by remember(element._centerOffset) {
         mutableStateOf(element._centerOffset)
     }
-    val isNotDeleteContained by remember(elementCenterOffset) {
+    val isDeleteContained by remember(elementCenterOffset) {
         derivedStateOf {
-            calculateDistance(
-                x1 = elementCenterOffset.x,
-                y1 = elementCenterOffset.y,
-                x2 = centerDeleteViewOffset.x,
-                y2 = centerDeleteViewOffset.y
-            ) >= length
+            calculateDistance(elementCenterOffset, centerDeleteViewOffset) <= length
         }
     }
 
     var prevScale by remember(element._prevScale) { mutableFloatStateOf(element._prevScale) }
     var scale by remember(element._scale) { mutableFloatStateOf(element._scale) }
-    val animScale by animateFloatAsState(
-        targetValue = scale,
-        tween(durationMillis = 100, easing = LinearEasing),
-        label = ""
-    )
+    val animScale by if (isDeleteContained) {
+        animateFloatAsState(
+            targetValue = scale,
+            tween(durationMillis = 100, easing = LinearEasing),
+            label = ""
+        )
+    } else {
+        remember(element._scale) { mutableFloatStateOf(element._scale) }
+    }
     var rotation by remember(element._rotation) { mutableFloatStateOf(element._rotation) }
     var offset by remember(element._offset) { mutableStateOf(element._offset) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
         prevScale *= zoomChange
-        scale = if (isNotDeleteContained) {
-            prevScale * zoomChange
-        } else {
+        scale = if (isDeleteContained) {
             0.5f
+        } else {
+            prevScale * zoomChange
         }
         rotation += rotationChange
         offset += (offsetChange * scale).rotate(rotation)
@@ -757,13 +773,14 @@ internal fun ElementView(
         onDrag(state.isTransformInProgress)
     }
 
-    LaunchedEffect(isNotDeleteContained) {
-        onDeleteContained(!isNotDeleteContained)
+    LaunchedEffect(isDeleteContained) {
+        onDeleteContained(isDeleteContained)
     }
 
     LaunchedEffect(state.isTransformInProgress) {
-        if (elementCenterOffset != Offset.Zero && !isNotDeleteContained && !state.isTransformInProgress) {
+        if (elementCenterOffset != Offset.Zero && isDeleteContained && !state.isTransformInProgress) {
             onAction(CameraAction.DeleteElement(element._id))
+            onInitInputText()
         }
     }
 
@@ -803,10 +820,10 @@ internal fun ElementView(
                     text = element.text,
                     fontSize = 48.sp,
                     color = colorResource(id = element.color),
-                    fontFamily = if (element.font == null) {
+                    fontFamily = if (element.fontId == 0) {
                         null
                     } else {
-                        FontFamily(element.font)
+                        FontFamily(Font(element.fontId))
                     },
                     textAlign = when (element.alignment) {
                         FontAlign.Center -> TextAlign.Center
