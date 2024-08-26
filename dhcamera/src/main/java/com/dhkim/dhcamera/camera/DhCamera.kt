@@ -29,6 +29,8 @@ object DhCamera {
     private var prevBtnImage: Any? = null
     private var thumbnailBackground: Any? = null
     private var isFinishCamera: Boolean = false
+    private var enableInputText: Boolean = false
+    private var enableAddGalleryImage: Boolean = false
 
     private var fontElements = listOf<FontElement>()
 
@@ -39,6 +41,16 @@ object DhCamera {
             backgroundItems.forEach { backgroundImage ->
                 DhCamera.backgroundItems.add(backgroundImage)
             }
+            return this
+        }
+
+        fun enableInputText(enableInputText: Boolean): Builder {
+            DhCamera.enableInputText = enableInputText
+            return this
+        }
+
+        fun enableAddGalleryImage(enableAddGalleryImage: Boolean): Builder {
+            DhCamera.enableAddGalleryImage = enableAddGalleryImage
             return this
         }
 
@@ -94,4 +106,6 @@ object DhCamera {
     internal fun getPrevBtnImage() = prevBtnImage
     internal fun getNextBtnImage() = nextBtnImage
     internal fun getFontElements() = fontElements
+    internal fun getEnableInputText() = enableInputText
+    internal fun getEnableAddGalleryImage() = enableAddGalleryImage
 }

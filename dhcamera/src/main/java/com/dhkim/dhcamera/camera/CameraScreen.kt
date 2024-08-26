@@ -883,34 +883,39 @@ internal fun PhotoOptions(
         )
 
         Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .align(Alignment.CenterEnd)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_text_field_white),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .clip(CircleShape)
-                    .size(48.dp)
-                    .background(color = colorResource(id = R.color.black_40))
-                    .padding(10.dp)
-                    .noRippleClick {
-                        onTextOptionClick(null)
-                    }
-            )
-            Image(
-                painter = painterResource(id = R.drawable.ic_gallery_white),
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(48.dp)
-                    .background(color = colorResource(id = R.color.black_40))
-                    .padding(10.dp)
-                    .noRippleClick {
-                        onImageOptionClick()
-                    }
-            )
+            if (DhCamera.getEnableInputText()) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_text_field_white),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(48.dp)
+                        .background(color = colorResource(id = R.color.black_40))
+                        .padding(10.dp)
+                        .noRippleClick {
+                            onTextOptionClick(null)
+                        }
+                )
+            }
+
+            if (DhCamera.getEnableAddGalleryImage()) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_gallery_white),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(48.dp)
+                        .background(color = colorResource(id = R.color.black_40))
+                        .padding(10.dp)
+                        .noRippleClick {
+                            onImageOptionClick()
+                        }
+                )
+            }
         }
     }
 }

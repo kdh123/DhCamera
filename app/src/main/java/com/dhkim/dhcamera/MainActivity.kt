@@ -76,16 +76,24 @@ class MainActivity : ComponentActivity() {
                 .build(),
         )
 
+        val fontsIds = listOf<Int>(
+            R.font.bm_dohyun,
+            R.font.bm_euljiro_10,
+            R.font.bm_euljiro_orae,
+            R.font.bm_hanna_10,
+            R.font.bm_hanna_pro,
+            R.font.bm_jiro,
+            R.font.bm_jua,
+            R.font.bm_kirang,
+            R.font.bm_yeonsun
+        )
+
         val fonts = mutableListOf<FontElement>().apply {
-            repeat(10) {
+            fontsIds.forEachIndexed { index, font ->
                 add(
                     FontElement.Builder()
-                        .text("폰트 $it")
-                        .font(if (it % 2 == 0) {
-                            R.font.bm_font
-                        } else {
-                            R.font.bm_dohyun_font
-                        })
+                        .text("font $index")
+                        .font(font)
                         .build()
                 )
             }
@@ -96,6 +104,8 @@ class MainActivity : ComponentActivity() {
                 DhCamera.Builder(this@MainActivity)
                     .folderName("DhKim")
                     .backgroundItems(backgroundImages)
+                    .enableInputText(true)
+                    .enableAddGalleryImage(true)
                     .fontElements(fonts)
                     .onPermissionDenied { permission ->
                         val deniedPermission = when (permission) {
