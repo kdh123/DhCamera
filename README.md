@@ -1,5 +1,7 @@
 ## What is DhCamera?
-DhCamera is a camera library which is designed to make you develop camera feature easily for your app. You can also take a photo which has image or text you want like a time stamp photo with this library other than basic camera feature.
+DhCamera is a camera library which is designed to help you develop camera feature easily for your app. And not only can you take a photo with an image or text, such as a timestamp, but you can also insert customized text or images from the gallery into a photo other than basic camera features using this library.
+> <img width="250" alt="image" src="https://github.com/user-attachments/assets/957fc12e-bcb3-4dd9-8c9a-5b67f97836f9">
+
 
 ## Required
 - JDK 17 or higher
@@ -48,15 +50,17 @@ dependencies {
 ```
 ## Warning
 - If OS version is less than 10, you should allow storage permission or a photo can't be saved into the storage and can't be loaded.
-- If OS version is 10 or higher, you don't need to allow storage permission
 
 ## How to use
 You can start Camera Activity through like below code.
 ```kotlin
 DhCamera.Builder(context)
-            .backgroundItems(backgroundImages)
             .folderName("DhCamera")
+            .backgroundItems(backgroundImages)
             .thumbnailBackground(R.drawable.thumbnail_background)
+            .enableInputText(true)
+            .fontElements(fonts)
+            .enableAddGalleryImage(true)
             .prevBtnImage(R.drawable.prev_btn)
             .nextBtnImage(R.drawable.next_btn)
             .onPermissionDenied { permission ->
@@ -134,17 +138,41 @@ DhCamera.Builder(context)
     ``` 
       
 - thumbnailBackground : If you use backgroundItems of properties, a small screen image list supposed to be rendered on a screen which has text or image will be shown. The tumbnailBackground of properties is the background image of item of screen list.
+- enableInputText, enableAddGalleryImage : If you set these properties to true, you can insert text customized or image from gallery into a photo taken like below.
+> <img width="250" alt="image" src="https://github.com/user-attachments/assets/64fd58b5-ded8-484f-816d-32907f5c50af">   <img width="250" alt="image" src="https://github.com/user-attachments/assets/ba92347f-2b64-438d-b1fd-0ef36701ddf3">
+- fontElements : The font list in below image for customized text. If you don't use this property or fontElements value is empty, font list is not shown.
+> <img width="250" alt="image" src="https://github.com/user-attachments/assets/5764a071-7a94-487e-9301-5ae10596eb52">
+  &nbsp;You can create fontElements value like below.
+ ```kotlin
+  val fontsIds = listOf<Int>(
+          R.font.font1,
+          R.font.font2,
+          R.font.font3,
+          R.font.font4,
+          R.font.font5
+      )
+
+  val fonts = mutableListOf<FontElement>().apply {
+      fontsIds.forEachIndexed { index, font ->
+          add(
+              FontElement.Builder()
+                  .text("font $index")
+                  .font(font)
+                  .build()
+          )
+      }
+  }
+  ```
+
 - onCompleted : It is next process after saving a photo. If you want to finish Camera Activity after running next process, set the isFinishCamera property to true like below code. (If not, set to false)
   - onCompleted delivers 'savedUri' which is the uri of image saved.
   ```kotlin
   onCompleted(isFinishCamera = true) { savedUri ->
                 // todo
             }
-  ```
 - onPermissionDenied: You can handle the case when required permission got denied.
 - prevBtnImage, nextBtnImage : You can change image of retake button and save button. (retake button is left button and save button is right button in below image)
-  
-  <img width="277" alt="image" src="https://github.com/user-attachments/assets/4735195a-797c-4081-8a54-4695d664fa7e">
+> <img width="250" alt="image" src="https://github.com/user-attachments/assets/c251a5d7-c5ba-4f68-98ed-c32d06d52819">
 
 ## Use Cases
 - [나의이야기](https://play.google.com/store/apps/details?id=com.dhkim.timecapsule) : The app that can make time capsule and you can check it in the future.
