@@ -278,7 +278,11 @@ internal fun TextOptions(
     onFontAlignChanged: () -> Unit
 ) {
     var currentOptionIndex by remember {
-        mutableIntStateOf(0)
+        if (fonts.isNotEmpty()) {
+            mutableIntStateOf(0)
+        } else {
+            mutableIntStateOf(1)
+        }
     }
 
     Column(
@@ -287,11 +291,13 @@ internal fun TextOptions(
             .fillMaxWidth()
             .padding(bottom = 10.dp)
     ) {
-        FontsLayout(
-            currentOptionIndex = currentOptionIndex,
-            fonts = fonts,
-            onFontChanged = onFontChanged,
-        )
+        if (fonts.isNotEmpty()) {
+            FontsLayout(
+                currentOptionIndex = currentOptionIndex,
+                fonts = fonts,
+                onFontChanged = onFontChanged,
+            )
+        }
 
         when (currentOptionIndex) {
             1 -> {
@@ -308,13 +314,15 @@ internal fun TextOptions(
                 .background(color = colorResource(id = R.color.black_50))
                 .align(Alignment.CenterHorizontally)
         ) {
-            TextOption(
-                drawableResId = R.drawable.ic_text_field_white,
-                isSelected = currentOptionIndex == 0,
-                onClick = {
-                    currentOptionIndex = 0
-                }
-            )
+            if (fonts.isNotEmpty()) {
+                TextOption(
+                    drawableResId = R.drawable.ic_text_field_white,
+                    isSelected = currentOptionIndex == 0,
+                    onClick = {
+                        currentOptionIndex = 0
+                    }
+                )
+            }
 
             TextOption(
                 drawableResId = R.drawable.ic_color_white,
