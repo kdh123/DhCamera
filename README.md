@@ -19,7 +19,7 @@ repositories {
 - Module Level
 ```kotlin
 dependencies {
-    implementation("com.github.kdh123:DhCamera:1.0.0-alpha03")
+    implementation("com.github.kdh123:DhCamera:1.0.0-alpha04")
 }
 ```
 
