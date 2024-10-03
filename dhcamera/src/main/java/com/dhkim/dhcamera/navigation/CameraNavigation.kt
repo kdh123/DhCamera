@@ -38,7 +38,9 @@ fun NavGraphBuilder.cameraMainNavigation(
             inputText = inputText,
             uiState = uiState,
             sideEffect = sideEffect,
-            onAction = viewModel::onCameraAction,
+            onAction = remember(viewModel) {
+                viewModel::onCameraAction
+            },
             onNext = onNext,
             onPermissionDenied = onPermissionDenied,
             onNavigateToInputText = navController::navigateToInputText,

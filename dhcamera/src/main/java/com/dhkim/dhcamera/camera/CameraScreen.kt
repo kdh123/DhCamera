@@ -536,7 +536,7 @@ internal fun AfterTakePhotoLayout(
                     .fillMaxSize()
             )
 
-            uiState.elements.forEachIndexed { index, element ->
+            uiState.elements.forEach { element ->
                 ElementView(
                     centerOffset = centerOffset,
                     centerDeleteViewOffset = centerDeleteViewOffset,
@@ -936,99 +936,42 @@ internal fun BeforeTakePhotoBottomLayout(
     backgroundItems: ImmutableList<BackgroundItem>,
     onAction: (CameraAction) -> Unit
 ) {
-    val configuration = LocalConfiguration.current
-    val proportion = ((configuration.screenHeightDp - 180) / 64)
+
     val scope = rememberCoroutineScope()
 
     Column {
         if (backgroundItems.isNotEmpty()) {
+            /*Thumbnails(
+                backgroundItems = backgroundItems,
+                onAction = onAction
+            )*/
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .padding(top = 10.dp)
             ) {
-                itemsIndexed(items = backgroundItems, key = { index, _ ->
-                    index
+                itemsIndexed(items = backgroundItems, key = { _, item ->
+                    item.id
                 }) { index, item ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .width(64.dp)
-                            .aspectRatio(1f)
-                            .run {
-                                if (DhCamera.getThumbnailBackground() == null) {
-                                    background(color = colorResource(id = R.color.light_gray))
-                                } else {
-                                    background(color = colorResource(id = R.color.white))
-                                }
-                            }
-                            .clickable {
-                                onAction(CameraAction.ChangeBackgroundImage(selectedIndex = index))
-                            }
-                    ) {
-                        if (DhCamera.getThumbnailBackground() != null) {
-                            GlideImage(
-                                imageModel = { DhCamera.getThumbnailBackground() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                            )
-                        }
+                    ThumbnailItem(
+                        index = index,
+                        item = item,
+                        onAction = onAction
+                    )
+                }
+            }
+        }
 
-                        val modifier = Modifier
-                            .padding(
-                                start = item.start.dp / proportion + 5.dp,
-                                end = item.end.dp / proportion + 5.dp,
-                                top = item.top.dp / proportion + 5.dp,
-                                bottom = item.bottom.dp / proportion + 5.dp
-                            )
-                            .run {
-                                if (item.isFillMaxSize) {
-                                    fillMaxSize()
-                                } else {
-                                    width((item.width / proportion).dp)
-                                        .height((item.height / proportion).dp)
-                                        .align(item.align.toAlignment())
-                                }
-                            }
-
-                        when (item) {
-                            is BackgroundItem.BackgroundImageItem -> {
-                                GlideImage(
-                                    imageOptions = ImageOptions(
-                                        contentScale = ContentScale.FillWidth
-                                    ),
-                                    imageModel = {
-                                        when {
-                                            item.drawable != null -> {
-                                                item.drawable
-                                            }
-
-                                            item.imageUrl != null -> {
-                                                item.imageUrl
-                                            }
-
-                                            else -> {}
-                                        }
-                                    },
-                                    modifier = modifier
-                                )
-                            }
-
-                            is BackgroundItem.BackgroundTextItem -> {
-                                BackgroundTextThumbnailLayout(item = item)
-                            }
-                        }
-
-                        if (item.isSelected) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .fillMaxSize()
-                                    .background(color = colorResource(id = R.color.black_40))
-                            )
-                        }
-                    }
+        val onPhotoTaken: () -> Unit = remember {
+            {
+                scope.launch {
+                    takePhoto(
+                        context = context,
+                        controller = controller,
+                        backgroundImageBitmap = graphicsLayer.toImageBitmap(),
+                        onAction = onAction
+                    )
                 }
             }
         }
@@ -1039,17 +982,98 @@ internal fun BeforeTakePhotoBottomLayout(
         ) {
             CameraButton(
                 modifier = Modifier
-                    .align(Alignment.Center)
-            ) {
-                scope.launch {
-                    takePhoto(
-                        context = context,
-                        controller = controller,
-                        backgroundImageBitmap = graphicsLayer.toImageBitmap(),
-                        onAction = onAction
-                    )
+                    .align(Alignment.Center),
+                onPhotoTaken = onPhotoTaken
+            )
+        }
+    }
+}
+
+@Composable
+fun ThumbnailItem(
+    index: Int,
+    item: BackgroundItem,
+    onAction: (CameraAction) -> Unit
+) {
+    val configuration = LocalConfiguration.current
+    val proportion = ((configuration.screenHeightDp - 180) / 64)
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .width(64.dp)
+            .aspectRatio(1f)
+            .run {
+                if (DhCamera.getThumbnailBackground() == null) {
+                    background(color = colorResource(id = R.color.light_gray))
+                } else {
+                    background(color = colorResource(id = R.color.white))
                 }
             }
+            .clickable {
+                onAction(CameraAction.ChangeBackgroundImage(selectedIndex = index))
+            }
+    ) {
+        if (DhCamera.getThumbnailBackground() != null) {
+            GlideImage(
+                imageModel = { DhCamera.getThumbnailBackground() },
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+        }
+
+        val modifier = Modifier
+            .padding(
+                start = item.start.dp / proportion + 5.dp,
+                end = item.end.dp / proportion + 5.dp,
+                top = item.top.dp / proportion + 5.dp,
+                bottom = item.bottom.dp / proportion + 5.dp
+            )
+            .run {
+                if (item.isFillMaxSize) {
+                    fillMaxSize()
+                } else {
+                    width((item.width / proportion).dp)
+                        .height((item.height / proportion).dp)
+                        .align(item.align.toAlignment())
+                }
+            }
+
+        when (item) {
+            is BackgroundItem.BackgroundImageItem -> {
+                GlideImage(
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.FillWidth
+                    ),
+                    imageModel = {
+                        when {
+                            item.drawable != null -> {
+                                item.drawable
+                            }
+
+                            item.imageUrl != null -> {
+                                item.imageUrl
+                            }
+
+                            else -> {}
+                        }
+                    },
+                    modifier = modifier
+                )
+            }
+
+            is BackgroundItem.BackgroundTextItem -> {
+                BackgroundTextThumbnailLayout(item = item)
+            }
+        }
+
+        if (item.isSelected) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .fillMaxSize()
+                    .background(color = colorResource(id = R.color.black_40))
+            )
         }
     }
 }

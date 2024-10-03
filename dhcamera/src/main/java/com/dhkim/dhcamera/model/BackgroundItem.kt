@@ -3,11 +3,15 @@ package com.dhkim.dhcamera.model
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import androidx.compose.runtime.Stable
 import androidx.core.content.res.ResourcesCompat
 import com.dhkim.dhcamera.camera.DhCamera
+import java.util.UUID
 
+@Stable
 sealed interface BackgroundItem {
 
+    val id: String
     val align: Int
     val width: Int
     val height: Int
@@ -18,7 +22,9 @@ sealed interface BackgroundItem {
     val bottom: Int
     val isSelected: Boolean
 
+    @Stable
     data class BackgroundImageItem(
+        override val id: String = "${UUID.randomUUID()}",
         override val align: Int = DhCamera.CENTER,
         override val width: Int = 0,
         override val height: Int = 0 ,
@@ -32,7 +38,9 @@ sealed interface BackgroundItem {
         val drawable: Drawable? = null,
     ) : BackgroundItem
 
+    @Stable
     data class BackgroundTextItem(
+        override val id: String = "${UUID.randomUUID()}",
         override val align: Int = DhCamera.CENTER,
         override val width: Int = 0,
         override val height: Int = 0 ,
