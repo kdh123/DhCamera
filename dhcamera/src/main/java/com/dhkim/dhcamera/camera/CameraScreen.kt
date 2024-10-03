@@ -974,7 +974,7 @@ internal fun BeforeTakePhotoBottomLayout(
 }
 
 @Composable
-fun ThumbnailItem(
+internal fun ThumbnailItem(
     index: Int,
     item: BackgroundItem,
     onAction: (CameraAction) -> Unit

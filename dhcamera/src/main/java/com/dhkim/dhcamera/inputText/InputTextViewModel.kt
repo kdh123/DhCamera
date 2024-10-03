@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class InputTextViewModel : ViewModel() {
+internal class InputTextViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(InputTextUiState())
     internal val uiState = _uiState.asStateFlow()

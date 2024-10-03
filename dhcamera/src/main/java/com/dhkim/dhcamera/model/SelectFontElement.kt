@@ -3,7 +3,7 @@ package com.dhkim.dhcamera.model
 import androidx.compose.runtime.Stable
 
 @Stable
-data class SelectFontElement(
+internal data class SelectFontElement(
     val isSelected: Boolean = false,
     val font: FontElement = FontElement()
 )

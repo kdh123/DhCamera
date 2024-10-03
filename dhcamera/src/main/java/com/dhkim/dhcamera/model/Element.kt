@@ -4,7 +4,7 @@ import androidx.annotation.ColorRes
 import androidx.compose.ui.geometry.Offset
 import com.dhkim.dhcamera.R
 
-sealed interface Element {
+internal sealed interface Element {
 
     val id: String
     var prevScale: Float
