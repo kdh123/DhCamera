@@ -707,8 +707,8 @@ internal fun ElementView(
     onInitInputText: () -> Unit
 ) {
     val length = dpToPx(dp = 28.dp)
-    var elementCenterOffset by remember(element._centerOffset) {
-        mutableStateOf(element._centerOffset)
+    var elementCenterOffset by remember(element.centerOffset) {
+        mutableStateOf(element.centerOffset)
     }
     val isDeleteContained by remember(elementCenterOffset) {
         derivedStateOf {
@@ -716,8 +716,8 @@ internal fun ElementView(
         }
     }
 
-    var prevScale by remember(element._prevScale) { mutableFloatStateOf(element._prevScale) }
-    var scale by remember(element._scale) { mutableFloatStateOf(element._scale) }
+    var prevScale by remember(element.prevScale) { mutableFloatStateOf(element.prevScale) }
+    var scale by remember(element.scale) { mutableFloatStateOf(element.scale) }
     val animScale by if (isDeleteContained) {
         animateFloatAsState(
             targetValue = scale,
@@ -725,10 +725,10 @@ internal fun ElementView(
             label = ""
         )
     } else {
-        remember(element._scale) { mutableFloatStateOf(element._scale) }
+        remember(element.scale) { mutableFloatStateOf(element.scale) }
     }
-    var rotation by remember(element._rotation) { mutableFloatStateOf(element._rotation) }
-    var offset by remember(element._offset) { mutableStateOf(element._offset) }
+    var rotation by remember(element.rotation) { mutableFloatStateOf(element.rotation) }
+    var offset by remember(element.offset) { mutableStateOf(element.offset) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
         prevScale *= zoomChange
         scale = if (isDeleteContained) {
@@ -759,7 +759,7 @@ internal fun ElementView(
 
         onAction(
             CameraAction.ChangeElementProperties(
-                id = element._id,
+                id = element.id,
                 prevScale = prevScale,
                 scale = scale,
                 rotation = rotation,
@@ -769,17 +769,14 @@ internal fun ElementView(
         )
     }
 
-    LaunchedEffect(state.isTransformInProgress) {
-        onDrag(state.isTransformInProgress)
-    }
-
     LaunchedEffect(isDeleteContained) {
         onDeleteContained(isDeleteContained)
     }
 
     LaunchedEffect(state.isTransformInProgress) {
+        onDrag(state.isTransformInProgress)
         if (elementCenterOffset != Offset.Zero && isDeleteContained && !state.isTransformInProgress) {
-            onAction(CameraAction.DeleteElement(element._id))
+            onAction(CameraAction.DeleteElement(element.id))
             onInitInputText()
         }
     }
@@ -1068,10 +1065,10 @@ internal fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
                 .run {
                     if (item.showTextBackground) {
                         padding(
-                            start = item.propStart.dp,
-                            end = item.propEnd.dp,
-                            top = item.propTop.dp,
-                            bottom = item.propBottom.dp
+                            start = item.start.dp,
+                            end = item.end.dp,
+                            top = item.top.dp,
+                            bottom = item.bottom.dp
                         )
                             .clip(RoundedCornerShape(10.dp))
                             .background(color = colorResource(id = R.color.black_40))
@@ -1080,10 +1077,10 @@ internal fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
                             )
                     } else {
                         padding(
-                            start = item.propStart.dp,
-                            end = item.propEnd.dp,
-                            top = item.propTop.dp,
-                            bottom = item.propBottom.dp
+                            start = item.start.dp,
+                            end = item.end.dp,
+                            top = item.top.dp,
+                            bottom = item.bottom.dp
                         )
                             .align(item.align.toAlignment())
                     }
@@ -1137,10 +1134,10 @@ internal fun BackgroundTextThumbnailLayout(item: BackgroundItem.BackgroundTextIt
                 .run {
                     if (item.showTextBackground) {
                         padding(
-                            start = (item.propStart / proportion).dp,
-                            end = (item.propEnd / proportion).dp,
-                            top = (item.propTop / proportion).dp,
-                            bottom = (item.propBottom / proportion).dp
+                            start = (item.start / proportion).dp,
+                            end = (item.end / proportion).dp,
+                            top = (item.top / proportion).dp,
+                            bottom = (item.bottom / proportion).dp
                         )
                             .clip(RoundedCornerShape(10.dp))
                             .background(color = colorResource(id = R.color.black_40))

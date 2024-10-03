@@ -19,7 +19,7 @@ internal data class CameraUiState(
         listOf(
             BackgroundItem.BackgroundImageItem(
                 imageUrl = "",
-                propIsSelected = true
+                isSelected = true
             )
         ) + DhCamera.getBackgroundItems()
     },

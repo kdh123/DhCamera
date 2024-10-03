@@ -4,70 +4,51 @@ import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
+import com.dhkim.dhcamera.camera.DhCamera
 
+sealed interface BackgroundItem {
 
-sealed class BackgroundItem(
-    val align: Int,
-    val width: Int,
-    val height: Int,
-    val isFillMaxSize: Boolean,
-    val start: Int,
-    val end: Int,
-    val top: Int,
-    val bottom: Int,
+    val align: Int
+    val width: Int
+    val height: Int
+    val isFillMaxSize: Boolean
+    val start: Int
+    val end: Int
+    val top: Int
+    val bottom: Int
     val isSelected: Boolean
-) {
+
     data class BackgroundImageItem(
+        override val align: Int = DhCamera.CENTER,
+        override val width: Int = 0,
+        override val height: Int = 0 ,
+        override val isFillMaxSize: Boolean = false,
+        override val start: Int = 0,
+        override val end: Int = 0,
+        override val top: Int = 0,
+        override val bottom: Int = 0,
+        override val isSelected: Boolean = false,
         val imageUrl: Any? = null,
         val drawable: Drawable? = null,
-        val propAlign: Int = 4,
-        val propWidth: Int = 0,
-        val propHeight: Int = 0,
-        val propIsFillMaxSize: Boolean = false,
-        val propStart: Int = 0,
-        val propEnd: Int = 0,
-        val propTop: Int = 0,
-        val propBottom: Int = 0,
-        val propIsSelected: Boolean = false
-    ) : BackgroundItem(
-        align = propAlign,
-        width = propWidth,
-        height = propHeight,
-        isFillMaxSize = propIsFillMaxSize,
-        start = propStart,
-        end = propEnd,
-        top = propTop,
-        bottom = propBottom,
-        isSelected = propIsSelected
-    )
+    ) : BackgroundItem
 
     data class BackgroundTextItem(
+        override val align: Int = DhCamera.CENTER,
+        override val width: Int = 0,
+        override val height: Int = 0 ,
+        override val isFillMaxSize: Boolean = false,
+        override val start: Int = 0,
+        override val end: Int = 0,
+        override val top: Int = 0,
+        override val bottom: Int = 0,
+        override val isSelected: Boolean = false,
         val text: String,
         val textColor: Int = -1,
         val textSize: Int = 0,
         val textAlign: Int = 2,
         val font: Typeface? = null,
         val showTextBackground: Boolean = true,
-        val propAlign: Int = 4,
-        val propWidth: Int = 0,
-        val propHeight: Int = 0,
-        val propIsFillMaxSize: Boolean = false,
-        val propStart: Int = 0,
-        val propEnd: Int = 0,
-        val propTop: Int = 0,
-        val propBottom: Int = 0,
-        val propIsSelected: Boolean = false
-    ) : BackgroundItem(
-        align = propAlign,
-        width = propWidth,
-        height = propHeight,
-        isFillMaxSize = propIsFillMaxSize,
-        start = propStart,
-        end = propEnd,
-        top = propTop,
-        bottom = propBottom,
-        isSelected = propIsSelected
-    )
+    ) : BackgroundItem
 }
 
 data class Padding(
@@ -133,16 +114,16 @@ class BackgroundImage {
 
         fun build(): BackgroundItem.BackgroundImageItem {
             return BackgroundItem.BackgroundImageItem(
+                align = align,
+                width = width,
+                height = height,
+                isFillMaxSize = isFillMaxSize,
+                start = padding.start,
+                end = padding.end,
+                top = padding.top,
+                bottom = padding.bottom,
                 imageUrl = imageUrl,
                 drawable = drawable,
-                propAlign = align,
-                propWidth = width,
-                propHeight = height,
-                propIsFillMaxSize = isFillMaxSize,
-                propStart = padding.start,
-                propEnd = padding.end,
-                propTop = padding.top,
-                propBottom = padding.bottom
             )
         }
     }
@@ -226,20 +207,20 @@ class BackgroundText {
 
         fun build(): BackgroundItem.BackgroundTextItem {
             return BackgroundItem.BackgroundTextItem(
+                align = align,
+                width = width,
+                height = height,
+                isFillMaxSize = isFillMaxSize,
+                start = padding.start,
+                end = padding.end,
+                top = padding.top,
+                bottom = padding.bottom,
                 text = text,
                 textColor = textColor,
                 textAlign = textAlign,
                 textSize = textSize,
                 font = font,
                 showTextBackground = showTextBackground,
-                propAlign = align,
-                propWidth = width,
-                propHeight = height,
-                propIsFillMaxSize = isFillMaxSize,
-                propStart = padding.start,
-                propEnd = padding.end,
-                propTop = padding.top,
-                propBottom = padding.bottom
             )
         }
     }
