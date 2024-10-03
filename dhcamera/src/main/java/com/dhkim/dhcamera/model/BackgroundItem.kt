@@ -2,7 +2,6 @@ package com.dhkim.dhcamera.model
 
 import android.content.Context
 import android.graphics.Typeface
-import android.graphics.drawable.Drawable
 import androidx.compose.runtime.Stable
 import androidx.core.content.res.ResourcesCompat
 import com.dhkim.dhcamera.camera.DhCamera
@@ -86,8 +85,8 @@ class BackgroundImage {
             return this
         }
 
-        fun width(with: Int): Builder {
-            this.width = with
+        fun width(width: Int): Builder {
+            this.width = width
             return this
         }
 

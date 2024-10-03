@@ -386,6 +386,12 @@ internal fun BeforeTakePhotoLayout(
                         .fillMaxSize()
                 } else {
                     Modifier
+                        .padding(
+                            start = currentItem.start.dp,
+                            end = currentItem.end.dp,
+                            top = currentItem.top.dp,
+                            bottom = currentItem.bottom.dp
+                        )
                         .width(currentItem.width.dp)
                         .height(currentItem.height.dp)
                 }
@@ -402,12 +408,6 @@ internal fun BeforeTakePhotoLayout(
                                 ),
                                 imageModel = { currentItem.imageSrc },
                                 modifier = modifier
-                                    .padding(
-                                        start = currentItem.start.dp,
-                                        end = currentItem.end.dp,
-                                        top = currentItem.top.dp,
-                                        bottom = currentItem.bottom.dp
-                                    )
                                     .align(backgroundItems[currentBackgroundImageIndex].align.toAlignment())
                             )
                         }
@@ -929,10 +929,6 @@ internal fun BeforeTakePhotoBottomLayout(
 
     Column {
         if (backgroundItems.isNotEmpty()) {
-            /*Thumbnails(
-                backgroundItems = backgroundItems,
-                onAction = onAction
-            )*/
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),

@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                 .width(64)
                 .height(64)
                 .align(DhCamera.TOP_CENTER)
-                .padding(start = 10, top = 10)
+                .padding(start = 10, top = 150)
                 .build(),
             BackgroundImage.Builder()
                 .imageSrc("https://picsum.photos/200")
