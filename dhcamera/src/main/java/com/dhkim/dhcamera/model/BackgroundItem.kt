@@ -34,8 +34,7 @@ sealed interface BackgroundItem {
         override val top: Int = 0,
         override val bottom: Int = 0,
         override val isSelected: Boolean = false,
-        val imageUrl: Any? = null,
-        val drawable: Drawable? = null,
+        val imageSrc: Any? = null
     ) : BackgroundItem
 
     @Stable
@@ -68,30 +67,17 @@ data class Padding(
 
 class BackgroundImage {
 
-    class Builder(private val context: Context) {
+    class Builder {
 
-        private var align: Int = 4
+        private var align: Int = DhCamera.CENTER
         private var width: Int = 0
         private var height: Int = 0
         private var padding: Padding = Padding()
         private var isFillMaxSize: Boolean = false
-        private var drawable: Drawable? = null
-        private var imageUrl: Any? = null
+        private var imageSrc: Any? = null
 
-        fun imageUrl(imageUrl: Any): Builder {
-            this.imageUrl = imageUrl
-            return this
-        }
-
-        fun drawable(resName: String): Builder {
-            val packageName = context.packageName
-            val resId = context.resources.getIdentifier(resName, "drawable", packageName)
-            drawable = if (resId != 0) {
-                context.getDrawable(resId)
-            } else {
-                null
-            }
-
+        fun imageSrc(imageSrc: Any): Builder {
+            this.imageSrc = imageSrc
             return this
         }
 
@@ -130,8 +116,7 @@ class BackgroundImage {
                 end = padding.end,
                 top = padding.top,
                 bottom = padding.bottom,
-                imageUrl = imageUrl,
-                drawable = drawable,
+                imageSrc = imageSrc
             )
         }
     }

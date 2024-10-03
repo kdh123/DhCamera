@@ -400,19 +400,7 @@ internal fun BeforeTakePhotoLayout(
                                 imageOptions = ImageOptions(
                                     contentScale = ContentScale.FillWidth
                                 ),
-                                imageModel = {
-                                    when {
-                                        currentItem.drawable != null -> {
-                                            currentItem.drawable
-                                        }
-
-                                        currentItem.imageUrl != null -> {
-                                            currentItem.imageUrl
-                                        }
-
-                                        else -> {}
-                                    }
-                                },
+                                imageModel = { currentItem.imageSrc },
                                 modifier = modifier
                                     .padding(
                                         start = currentItem.start.dp,
@@ -1045,19 +1033,7 @@ fun ThumbnailItem(
                     imageOptions = ImageOptions(
                         contentScale = ContentScale.FillWidth
                     ),
-                    imageModel = {
-                        when {
-                            item.drawable != null -> {
-                                item.drawable
-                            }
-
-                            item.imageUrl != null -> {
-                                item.imageUrl
-                            }
-
-                            else -> {}
-                        }
-                    },
+                    imageModel = { item.imageSrc },
                     modifier = modifier
                 )
             }
