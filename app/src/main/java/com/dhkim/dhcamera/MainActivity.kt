@@ -38,42 +38,30 @@ class MainActivity : ComponentActivity() {
                 .align(DhCamera.CENTER)
                 .padding(start = 10, top = 50)
                 .build(),
-            BackgroundImage.Builder(this)
-                .drawable("ic_launcher_background")
+            BackgroundImage.Builder()
+                .imageSrc(R.drawable.ic_apartment_skyblue)
                 .width(64)
                 .height(64)
                 .align(DhCamera.TOP_CENTER)
-                .padding(start = 10, top = 10)
+                .padding(start = 10, top = 150)
                 .build(),
-            BackgroundImage.Builder(this)
-                .imageUrl("https://picsum.photos/200")
+            BackgroundImage.Builder()
+                .imageSrc("https://picsum.photos/200")
                 .fillMaxSize()
                 .padding(start = 50, end = 50)
                 .build(),
-            BackgroundImage.Builder(this)
-                .drawable("none_mode_white")
+            BackgroundImage.Builder()
+                .imageSrc(R.drawable.ic_launcher_background)
                 .width(64)
                 .height(64)
                 .align(DhCamera.BOTTOM_CENTER)
                 .build(),
-            BackgroundImage.Builder(this)
-                .drawable("ic_flip_camera_android_white")
+            BackgroundImage.Builder()
+                .imageSrc(R.drawable.ic_launcher_foreground)
                 .width(64)
                 .height(64)
                 .align(DhCamera.TOP_CENTER)
-                .build(),
-            BackgroundImage.Builder(this)
-                .drawable("none_mode_white")
-                .width(64)
-                .height(64)
-                .align(DhCamera.BOTTOM_END)
-                .build(),
-            BackgroundImage.Builder(this)
-                .drawable("ic_flip_camera_android_white")
-                .width(64)
-                .height(64)
-                .align(DhCamera.CENTER)
-                .build(),
+                .build()
         )
 
         val fontsIds = listOf<Int>(

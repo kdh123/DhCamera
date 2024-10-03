@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 
 const val CAMERA_ROUTE = "camera"
 
-fun NavGraphBuilder.cameraMainNavigation(
+internal fun NavGraphBuilder.cameraMainNavigation(
     navController: NavHostController,
     onNext: (SavedUrl) -> Unit,
     onPermissionDenied: (Permission) -> Unit,
@@ -38,7 +38,9 @@ fun NavGraphBuilder.cameraMainNavigation(
             inputText = inputText,
             uiState = uiState,
             sideEffect = sideEffect,
-            onAction = viewModel::onCameraAction,
+            onAction = remember(viewModel) {
+                viewModel::onCameraAction
+            },
             onNext = onNext,
             onPermissionDenied = onPermissionDenied,
             onNavigateToInputText = navController::navigateToInputText,
@@ -50,7 +52,7 @@ fun NavGraphBuilder.cameraMainNavigation(
     }
 }
 
-fun NavGraphBuilder.inputTextNavigation(
+internal fun NavGraphBuilder.inputTextNavigation(
     onCompleted: (InputTextRoute) -> Unit,
     onBack: () -> Unit
 ) {
@@ -73,7 +75,7 @@ fun NavGraphBuilder.inputTextNavigation(
     }
 }
 
-fun NavController.navigateToInputText(
+internal fun NavController.navigateToInputText(
     data: InputTextRoute?
 ) {
     if (data != null) {
@@ -84,7 +86,7 @@ fun NavController.navigateToInputText(
 }
 
 @Serializable
-data class InputTextRoute(
+internal data class InputTextRoute(
     val id: String = "",
     val text: String = "",
     val font: Int = 0,

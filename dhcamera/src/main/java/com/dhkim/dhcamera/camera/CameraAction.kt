@@ -5,7 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import com.dhkim.dhcamera.navigation.InputTextRoute
 
-sealed interface CameraAction {
+internal sealed interface CameraAction {
 
     data class ChangeBackgroundImage(val selectedIndex: Int) : CameraAction
     data object SavingPhoto : CameraAction

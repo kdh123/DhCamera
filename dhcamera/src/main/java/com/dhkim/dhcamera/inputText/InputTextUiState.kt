@@ -1,7 +1,6 @@
 package com.dhkim.dhcamera.inputText
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.text.input.TextFieldValue
 import com.dhkim.dhcamera.R
 import com.dhkim.dhcamera.camera.DhCamera
 import com.dhkim.dhcamera.model.FontAlign
@@ -12,7 +11,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @Stable
-data class InputTextUiState(
+internal data class InputTextUiState(
     val id: String = "",
     val fonts: ImmutableList<SelectFontElement> = DhCamera.getFontElements()
         .mapIndexed { index, fontElement ->

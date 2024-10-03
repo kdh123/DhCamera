@@ -386,6 +386,12 @@ internal fun BeforeTakePhotoLayout(
                         .fillMaxSize()
                 } else {
                     Modifier
+                        .padding(
+                            start = currentItem.start.dp,
+                            end = currentItem.end.dp,
+                            top = currentItem.top.dp,
+                            bottom = currentItem.bottom.dp
+                        )
                         .width(currentItem.width.dp)
                         .height(currentItem.height.dp)
                 }
@@ -400,26 +406,8 @@ internal fun BeforeTakePhotoLayout(
                                 imageOptions = ImageOptions(
                                     contentScale = ContentScale.FillWidth
                                 ),
-                                imageModel = {
-                                    when {
-                                        currentItem.drawable != null -> {
-                                            currentItem.drawable
-                                        }
-
-                                        currentItem.imageUrl != null -> {
-                                            currentItem.imageUrl
-                                        }
-
-                                        else -> {}
-                                    }
-                                },
+                                imageModel = { currentItem.imageSrc },
                                 modifier = modifier
-                                    .padding(
-                                        start = currentItem.start.dp,
-                                        end = currentItem.end.dp,
-                                        top = currentItem.top.dp,
-                                        bottom = currentItem.bottom.dp
-                                    )
                                     .align(backgroundItems[currentBackgroundImageIndex].align.toAlignment())
                             )
                         }
@@ -536,7 +524,7 @@ internal fun AfterTakePhotoLayout(
                     .fillMaxSize()
             )
 
-            uiState.elements.forEachIndexed { index, element ->
+            uiState.elements.forEach { element ->
                 ElementView(
                     centerOffset = centerOffset,
                     centerDeleteViewOffset = centerDeleteViewOffset,
@@ -707,8 +695,8 @@ internal fun ElementView(
     onInitInputText: () -> Unit
 ) {
     val length = dpToPx(dp = 28.dp)
-    var elementCenterOffset by remember(element._centerOffset) {
-        mutableStateOf(element._centerOffset)
+    var elementCenterOffset by remember(element.centerOffset) {
+        mutableStateOf(element.centerOffset)
     }
     val isDeleteContained by remember(elementCenterOffset) {
         derivedStateOf {
@@ -716,8 +704,8 @@ internal fun ElementView(
         }
     }
 
-    var prevScale by remember(element._prevScale) { mutableFloatStateOf(element._prevScale) }
-    var scale by remember(element._scale) { mutableFloatStateOf(element._scale) }
+    var prevScale by remember(element.prevScale) { mutableFloatStateOf(element.prevScale) }
+    var scale by remember(element.scale) { mutableFloatStateOf(element.scale) }
     val animScale by if (isDeleteContained) {
         animateFloatAsState(
             targetValue = scale,
@@ -725,10 +713,10 @@ internal fun ElementView(
             label = ""
         )
     } else {
-        remember(element._scale) { mutableFloatStateOf(element._scale) }
+        remember(element.scale) { mutableFloatStateOf(element.scale) }
     }
-    var rotation by remember(element._rotation) { mutableFloatStateOf(element._rotation) }
-    var offset by remember(element._offset) { mutableStateOf(element._offset) }
+    var rotation by remember(element.rotation) { mutableFloatStateOf(element.rotation) }
+    var offset by remember(element.offset) { mutableStateOf(element.offset) }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
         prevScale *= zoomChange
         scale = if (isDeleteContained) {
@@ -759,7 +747,7 @@ internal fun ElementView(
 
         onAction(
             CameraAction.ChangeElementProperties(
-                id = element._id,
+                id = element.id,
                 prevScale = prevScale,
                 scale = scale,
                 rotation = rotation,
@@ -769,17 +757,14 @@ internal fun ElementView(
         )
     }
 
-    LaunchedEffect(state.isTransformInProgress) {
-        onDrag(state.isTransformInProgress)
-    }
-
     LaunchedEffect(isDeleteContained) {
         onDeleteContained(isDeleteContained)
     }
 
     LaunchedEffect(state.isTransformInProgress) {
+        onDrag(state.isTransformInProgress)
         if (elementCenterOffset != Offset.Zero && isDeleteContained && !state.isTransformInProgress) {
-            onAction(CameraAction.DeleteElement(element._id))
+            onAction(CameraAction.DeleteElement(element.id))
             onInitInputText()
         }
     }
@@ -939,8 +924,7 @@ internal fun BeforeTakePhotoBottomLayout(
     backgroundItems: ImmutableList<BackgroundItem>,
     onAction: (CameraAction) -> Unit
 ) {
-    val configuration = LocalConfiguration.current
-    val proportion = ((configuration.screenHeightDp - 180) / 64)
+
     val scope = rememberCoroutineScope()
 
     Column {
@@ -951,87 +935,27 @@ internal fun BeforeTakePhotoBottomLayout(
                 modifier = Modifier
                     .padding(top = 10.dp)
             ) {
-                itemsIndexed(items = backgroundItems, key = { index, _ ->
-                    index
+                itemsIndexed(items = backgroundItems, key = { _, item ->
+                    item.id
                 }) { index, item ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .width(64.dp)
-                            .aspectRatio(1f)
-                            .run {
-                                if (DhCamera.getThumbnailBackground() == null) {
-                                    background(color = colorResource(id = R.color.light_gray))
-                                } else {
-                                    background(color = colorResource(id = R.color.white))
-                                }
-                            }
-                            .clickable {
-                                onAction(CameraAction.ChangeBackgroundImage(selectedIndex = index))
-                            }
-                    ) {
-                        if (DhCamera.getThumbnailBackground() != null) {
-                            GlideImage(
-                                imageModel = { DhCamera.getThumbnailBackground() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                            )
-                        }
+                    ThumbnailItem(
+                        index = index,
+                        item = item,
+                        onAction = onAction
+                    )
+                }
+            }
+        }
 
-                        val modifier = Modifier
-                            .padding(
-                                start = item.start.dp / proportion + 5.dp,
-                                end = item.end.dp / proportion + 5.dp,
-                                top = item.top.dp / proportion + 5.dp,
-                                bottom = item.bottom.dp / proportion + 5.dp
-                            )
-                            .run {
-                                if (item.isFillMaxSize) {
-                                    fillMaxSize()
-                                } else {
-                                    width((item.width / proportion).dp)
-                                        .height((item.height / proportion).dp)
-                                        .align(item.align.toAlignment())
-                                }
-                            }
-
-                        when (item) {
-                            is BackgroundItem.BackgroundImageItem -> {
-                                GlideImage(
-                                    imageOptions = ImageOptions(
-                                        contentScale = ContentScale.FillWidth
-                                    ),
-                                    imageModel = {
-                                        when {
-                                            item.drawable != null -> {
-                                                item.drawable
-                                            }
-
-                                            item.imageUrl != null -> {
-                                                item.imageUrl
-                                            }
-
-                                            else -> {}
-                                        }
-                                    },
-                                    modifier = modifier
-                                )
-                            }
-
-                            is BackgroundItem.BackgroundTextItem -> {
-                                BackgroundTextThumbnailLayout(item = item)
-                            }
-                        }
-
-                        if (item.isSelected) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .fillMaxSize()
-                                    .background(color = colorResource(id = R.color.black_40))
-                            )
-                        }
-                    }
+        val onPhotoTaken: () -> Unit = remember {
+            {
+                scope.launch {
+                    takePhoto(
+                        context = context,
+                        controller = controller,
+                        backgroundImageBitmap = graphicsLayer.toImageBitmap(),
+                        onAction = onAction
+                    )
                 }
             }
         }
@@ -1042,17 +966,86 @@ internal fun BeforeTakePhotoBottomLayout(
         ) {
             CameraButton(
                 modifier = Modifier
-                    .align(Alignment.Center)
-            ) {
-                scope.launch {
-                    takePhoto(
-                        context = context,
-                        controller = controller,
-                        backgroundImageBitmap = graphicsLayer.toImageBitmap(),
-                        onAction = onAction
-                    )
+                    .align(Alignment.Center),
+                onPhotoTaken = onPhotoTaken
+            )
+        }
+    }
+}
+
+@Composable
+internal fun ThumbnailItem(
+    index: Int,
+    item: BackgroundItem,
+    onAction: (CameraAction) -> Unit
+) {
+    val configuration = LocalConfiguration.current
+    val proportion = ((configuration.screenHeightDp - 180) / 64)
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .width(64.dp)
+            .aspectRatio(1f)
+            .run {
+                if (DhCamera.getThumbnailBackground() == null) {
+                    background(color = colorResource(id = R.color.light_gray))
+                } else {
+                    background(color = colorResource(id = R.color.white))
                 }
             }
+            .clickable {
+                onAction(CameraAction.ChangeBackgroundImage(selectedIndex = index))
+            }
+    ) {
+        if (DhCamera.getThumbnailBackground() != null) {
+            GlideImage(
+                imageModel = { DhCamera.getThumbnailBackground() },
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+        }
+
+        val modifier = Modifier
+            .padding(
+                start = item.start.dp / proportion + 5.dp,
+                end = item.end.dp / proportion + 5.dp,
+                top = item.top.dp / proportion + 5.dp,
+                bottom = item.bottom.dp / proportion + 5.dp
+            )
+            .run {
+                if (item.isFillMaxSize) {
+                    fillMaxSize()
+                } else {
+                    width((item.width / proportion).dp)
+                        .height((item.height / proportion).dp)
+                        .align(item.align.toAlignment())
+                }
+            }
+
+        when (item) {
+            is BackgroundItem.BackgroundImageItem -> {
+                GlideImage(
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.FillWidth
+                    ),
+                    imageModel = { item.imageSrc },
+                    modifier = modifier
+                )
+            }
+
+            is BackgroundItem.BackgroundTextItem -> {
+                BackgroundTextThumbnailLayout(item = item)
+            }
+        }
+
+        if (item.isSelected) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .fillMaxSize()
+                    .background(color = colorResource(id = R.color.black_40))
+            )
         }
     }
 }
@@ -1068,10 +1061,10 @@ internal fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
                 .run {
                     if (item.showTextBackground) {
                         padding(
-                            start = item.propStart.dp,
-                            end = item.propEnd.dp,
-                            top = item.propTop.dp,
-                            bottom = item.propBottom.dp
+                            start = item.start.dp,
+                            end = item.end.dp,
+                            top = item.top.dp,
+                            bottom = item.bottom.dp
                         )
                             .clip(RoundedCornerShape(10.dp))
                             .background(color = colorResource(id = R.color.black_40))
@@ -1080,10 +1073,10 @@ internal fun BackgroundTextLayout(item: BackgroundItem.BackgroundTextItem) {
                             )
                     } else {
                         padding(
-                            start = item.propStart.dp,
-                            end = item.propEnd.dp,
-                            top = item.propTop.dp,
-                            bottom = item.propBottom.dp
+                            start = item.start.dp,
+                            end = item.end.dp,
+                            top = item.top.dp,
+                            bottom = item.bottom.dp
                         )
                             .align(item.align.toAlignment())
                     }
@@ -1137,10 +1130,10 @@ internal fun BackgroundTextThumbnailLayout(item: BackgroundItem.BackgroundTextIt
                 .run {
                     if (item.showTextBackground) {
                         padding(
-                            start = (item.propStart / proportion).dp,
-                            end = (item.propEnd / proportion).dp,
-                            top = (item.propTop / proportion).dp,
-                            bottom = (item.propBottom / proportion).dp
+                            start = (item.start / proportion).dp,
+                            end = (item.end / proportion).dp,
+                            top = (item.top / proportion).dp,
+                            bottom = (item.bottom / proportion).dp
                         )
                             .clip(RoundedCornerShape(10.dp))
                             .background(color = colorResource(id = R.color.black_40))

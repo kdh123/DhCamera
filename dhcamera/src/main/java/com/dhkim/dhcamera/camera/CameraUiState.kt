@@ -18,8 +18,8 @@ internal data class CameraUiState(
     } else {
         listOf(
             BackgroundItem.BackgroundImageItem(
-                imageUrl = "",
-                propIsSelected = true
+                imageSrc = "",
+                isSelected = true
             )
         ) + DhCamera.getBackgroundItems()
     },

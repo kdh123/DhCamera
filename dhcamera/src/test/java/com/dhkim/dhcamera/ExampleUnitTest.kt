@@ -30,7 +30,7 @@ class ExampleUnitTest {
         val updateList = list.apply {
             set(1, element)
         }
-        println("element : ${updateList[1]}, ${element._scale}")
+        println("element : ${updateList[1]}, ${element.scale}")
 
     }
 }

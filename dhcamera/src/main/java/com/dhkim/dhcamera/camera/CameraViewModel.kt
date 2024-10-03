@@ -60,7 +60,7 @@ internal class CameraViewModel : ViewModel() {
             }
 
             is CameraAction.AddText -> {
-                val isEdit = _uiState.value.elements.firstOrNull { it._id == action.inputText.id } != null
+                val isEdit = _uiState.value.elements.firstOrNull { it.id == action.inputText.id } != null
 
                 if (isEdit) {
                     editText(inputText = action.inputText)
@@ -79,7 +79,7 @@ internal class CameraViewModel : ViewModel() {
         centerOffset: Offset,
         offset: Offset
     ) {
-        val index = _uiState.value.elements.indexOfFirst { it._id == id }
+        val index = _uiState.value.elements.indexOfFirst { it.id == id }
         if (index < 0) {
             return
         }
@@ -90,38 +90,20 @@ internal class CameraViewModel : ViewModel() {
             is Element.Text -> {
                 element.apply {
                     this.prevScale = prevScale
-                    _prevScale = prevScale
-
                     this.scale = scale
-                    _scale = scale
-
                     this.rotation = rotation
-                    _rotation = rotation
-
                     this.centerOffset = centerOffset
-                    _centerOffset = centerOffset
-
                     this.offset = offset
-                    _offset = offset
                 }
             }
 
             is Element.Image -> {
                 element.apply {
                     this.prevScale = prevScale
-                    _prevScale = prevScale
-
                     this.scale = scale
-                    _scale = scale
-
                     this.rotation = rotation
-                    _rotation = rotation
-
                     this.centerOffset = centerOffset
-                    _centerOffset = centerOffset
-
                     this.offset = offset
-                    _offset = offset
                 }
             }
         }
@@ -136,7 +118,7 @@ internal class CameraViewModel : ViewModel() {
     }
 
     private fun deleteElement(id: String) {
-        val updateElements = _uiState.value.elements.filter { it._id != id }
+        val updateElements = _uiState.value.elements.filter { it.id != id }
         _uiState.value = _uiState.value.copy(elements = updateElements)
     }
 
@@ -170,7 +152,7 @@ internal class CameraViewModel : ViewModel() {
 
     private fun editText(inputText: InputTextRoute) {
         val currentElements = _uiState.value.elements
-        val index = currentElements.indexOfFirst { it._id == inputText.id }
+        val index = currentElements.indexOfFirst { it.id == inputText.id }
         val updateElements = currentElements.toMutableList()
             .apply {
                 val element = (get(index) as Element.Text).copy(
@@ -191,17 +173,17 @@ internal class CameraViewModel : ViewModel() {
                 when (backgroundItem) {
                     is BackgroundItem.BackgroundImageItem -> {
                         if (selectedIndex == index) {
-                            backgroundItem.copy(propIsSelected = true)
+                            backgroundItem.copy(isSelected = true)
                         } else {
-                            backgroundItem.copy(propIsSelected = false)
+                            backgroundItem.copy(isSelected = false)
                         }
                     }
 
                     is BackgroundItem.BackgroundTextItem -> {
                         if (selectedIndex == index) {
-                            backgroundItem.copy(propIsSelected = true)
+                            backgroundItem.copy(isSelected = true)
                         } else {
-                            backgroundItem.copy(propIsSelected = false)
+                            backgroundItem.copy(isSelected = false)
                         }
                     }
                 }

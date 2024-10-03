@@ -3,7 +3,7 @@ package com.dhkim.dhcamera.inputText
 import androidx.compose.ui.text.input.TextFieldValue
 import com.dhkim.dhcamera.navigation.InputTextRoute
 
-sealed interface InputTextAction {
+internal sealed interface InputTextAction {
 
     data class ChangeFont(val selectedIndex: Int) : InputTextAction
     data class ChangeFontColor(val selectedIndex: Int) : InputTextAction

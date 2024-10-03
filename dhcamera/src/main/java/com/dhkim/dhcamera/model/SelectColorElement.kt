@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import com.dhkim.dhcamera.R
 
 @Stable
-data class SelectColorElement(
+internal data class SelectColorElement(
     val isSelected: Boolean = false,
     @ColorRes val color: Int = R.color.white
 )
