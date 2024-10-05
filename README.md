@@ -19,7 +19,7 @@ repositories {
 - Module Level
 ```kotlin
 dependencies {
-    implementation("com.github.kdh123:DhCamera:1.0.0-alpha04")
+    implementation("com.github.kdh123:DhCamera:1.0.0-alpha05")
 }
 ```
 
@@ -49,7 +49,7 @@ dependencies {
 
 ```
 ## Warning
-- If OS version is less than 10, you should allow storage permission or a photo can't be saved into the storage and can't be loaded.
+- If OS version is less than 10, you should allow storage permission or a photo can't be saved into the storage and rendered on the screen.
 
 ## How to use
 You can start Camera Activity through like below code.
@@ -102,13 +102,11 @@ DhCamera.Builder(context)
       ```
     - Image
       - The unit of width and height is dp.
-      - If you use drawable in resource, you can use drawable property. You should put the name of drawable resource.
-      - If you use the url of image, you can use imageUrl property.
-      - If you use both drawable and imageUrl properties, the drawable will be loaded.
+      - You can input the image resource(url, drawable resource or something) into imageSrc property.  
       ```kotlin
-      BackgroundImage.Builder(context)
-                .drawable("my_image")
-                //.imageUrl("https://picsum.photos/200")
+      BackgroundImage.Builder()
+                //.imageSrc(R.drawable.my_image)
+                .imageSrc("https://picsum.photos/200")
                 //.fillMaxSize()
                 .width(64)
                 .height(64)
@@ -128,8 +126,8 @@ DhCamera.Builder(context)
                 .textColor(R.color.purple_200)
                 .align(DhCamera.CENTER)
                 .build(),
-            BackgroundImage.Builder(context)
-                .drawable("my_image")
+            BackgroundImage.Builder()
+                .imageSrc(R.drawable.my_image)
                 .width(64)
                 .height(64)
                 .align(DhCamera.TOP_CENTER)
