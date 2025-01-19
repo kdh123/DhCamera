@@ -136,6 +136,11 @@ DhCamera.Builder(context)
     ``` 
       
 - thumbnailBackground : If you use backgroundItems of properties, a small screen image list supposed to be rendered on a screen which has text or image will be shown. The tumbnailBackground of properties is the background image of item of screen list.
+
+### When you set the properties both backgroundItems and thumbnailBackground, you can see the screen like below for example.
+> <img width="250" alt="image" src="https://github.com/user-attachments/assets/c4642713-894b-4028-baea-fbdeae89b452">
+
+
 - enableInputText, enableAddGalleryImage : If you set these properties to true, you can insert text customized or image from gallery into a photo taken like below.
 > <img width="250" alt="image" src="https://github.com/user-attachments/assets/64fd58b5-ded8-484f-816d-32907f5c50af">   <img width="250" alt="image" src="https://github.com/user-attachments/assets/ba92347f-2b64-438d-b1fd-0ef36701ddf3">
 - fontElements : The font list in below image for customized text. If you don't use this property or fontElements value is empty, font list is not shown.
