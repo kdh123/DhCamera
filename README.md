@@ -19,7 +19,7 @@ repositories {
 - Module Level
 ```kotlin
 dependencies {
-    implementation("com.github.kdh123:DhCamera:1.0.0-alpha05")
+    implementation("com.github.kdh123:DhCamera:1.0.0-beta02")
 }
 ```
 
@@ -50,6 +50,7 @@ dependencies {
 ```
 ## Warning
 - If OS version is less than 10, you should allow storage permission or a photo can't be saved into the storage and rendered on the screen.
+- To support Android 16KB policy, use version 1.0.0-beta02 or higher (If you use 1.0.0-beta02 version or higher, kotlin version should be 2.x.x)
 
 ## How to use
 You can start Camera Activity through like below code.
