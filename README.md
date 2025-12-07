@@ -19,7 +19,7 @@ repositories {
 - Module Level
 ```kotlin
 dependencies {
-    implementation("com.github.kdh123:DhCamera:1.0.0-alpha04")
+    implementation("com.github.kdh123:DhCamera:1.0.0-alpha05")
 }
 ```
 
@@ -49,7 +49,7 @@ dependencies {
 
 ```
 ## Warning
-- If OS version is less than 10, you should allow storage permission or a photo can't be saved into the storage and can't be loaded.
+- If OS version is less than 10, you should allow storage permission or a photo can't be saved into the storage and rendered on the screen.
 
 ## How to use
 You can start Camera Activity through like below code.
@@ -102,13 +102,11 @@ DhCamera.Builder(context)
       ```
     - Image
       - The unit of width and height is dp.
-      - If you use drawable in resource, you can use drawable property. You should put the name of drawable resource.
-      - If you use the url of image, you can use imageUrl property.
-      - If you use both drawable and imageUrl properties, the drawable will be loaded.
+      - You can input the image resource(url, drawable resource or something) into imageSrc property.  
       ```kotlin
-      BackgroundImage.Builder(context)
-                .drawable("my_image")
-                //.imageUrl("https://picsum.photos/200")
+      BackgroundImage.Builder()
+                //.imageSrc(R.drawable.my_image)
+                .imageSrc("https://picsum.photos/200")
                 //.fillMaxSize()
                 .width(64)
                 .height(64)
@@ -128,8 +126,8 @@ DhCamera.Builder(context)
                 .textColor(R.color.purple_200)
                 .align(DhCamera.CENTER)
                 .build(),
-            BackgroundImage.Builder(context)
-                .drawable("my_image")
+            BackgroundImage.Builder()
+                .imageSrc(R.drawable.my_image)
                 .width(64)
                 .height(64)
                 .align(DhCamera.TOP_CENTER)
@@ -138,6 +136,11 @@ DhCamera.Builder(context)
     ``` 
       
 - thumbnailBackground : If you use backgroundItems of properties, a small screen image list supposed to be rendered on a screen which has text or image will be shown. The tumbnailBackground of properties is the background image of item of screen list.
+
+### When you set the properties both backgroundItems and thumbnailBackground, you can see the screen like below for example.
+> <img width="250" alt="image" src="https://github.com/user-attachments/assets/c4642713-894b-4028-baea-fbdeae89b452">
+
+
 - enableInputText, enableAddGalleryImage : If you set these properties to true, you can insert text customized or image from gallery into a photo taken like below.
 > <img width="250" alt="image" src="https://github.com/user-attachments/assets/64fd58b5-ded8-484f-816d-32907f5c50af">   <img width="250" alt="image" src="https://github.com/user-attachments/assets/ba92347f-2b64-438d-b1fd-0ef36701ddf3">
 - fontElements : The font list in below image for customized text. If you don't use this property or fontElements value is empty, font list is not shown.
