@@ -13,11 +13,11 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.kdh123"
                 artifactId = "DhCamera"
-                version = "1.0.0-alpha07"
+                version = "1.0.0-beta01"
 
                 pom {
-                    name.set("DhCamera-1.0.0-alpha07")
-                    description.set("DhCamera-1.0.0-alpha07")
+                    name.set("DhCamera-1.0.0-beta01")
+                    description.set("DhCamera-1.0.0-beta01")
                     url.set("https://github.com/kdh123/DhCamera.git")
 
                     licenses {
